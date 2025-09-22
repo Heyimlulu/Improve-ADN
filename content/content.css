@@ -1,19 +1,41 @@
+/* CSS Custom Properties */
+:root {
+    --adn-control-bg: transparent;
+    --adn-control-color: white;
+    --adn-control-spacing: 10px;
+    --adn-option-bg: #333;
+    --adn-blur-amount: 10px;
+    --adn-font-size-button: 18px;
+    --adn-transition-duration: 0.3s;
+}
+
+/* Playback Speed Control */
 .adn-improver-speed-control {
-    background: transparent;
-    color: white;
+    background: var(--adn-control-bg);
+    color: var(--adn-control-color);
     border: none;
-    margin-right: 10px;
+    margin-right: var(--adn-control-spacing);
+    transition: opacity var(--adn-transition-duration) ease;
+}
+
+.adn-improver-speed-control:hover {
+    opacity: 0.8;
 }
 
 .adn-improver-speed-control option {
-    background: #333;
+    background: var(--adn-option-bg);
+    color: var(--adn-control-color);
 }
 
-/* UI Tweaks */
+/* ===== UI TWEAKS ===== */
+
+/* Hide Thumbnails */
 body.adn-improver-hide-thumbnails [data-testid^="season-list-item-"] img {
-    filter: blur(10px);
+    filter: blur(var(--adn-blur-amount));
+    transition: filter var(--adn-transition-duration) ease;
 }
 
+/* Hide Scrollbar */
 html.adn-improver-hide-scrollbar::-webkit-scrollbar, 
 body.adn-improver-hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -22,30 +44,74 @@ body.adn-improver-hide-scrollbar::-webkit-scrollbar {
 html.adn-improver-hide-scrollbar, 
 body.adn-improver-hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    scrollbar-width: none;     /* Firefox */
 }
 
-/* More generic selector for the player's modal dialog/dim screen */
+/* Hide Player Dim Screen */
 body.adn-improver-hide-player-dim .vjs-modal-dialog {
     display: none !important;
 }
 
+/* Hide Subtitles */
 body.adn-improver-hide-subtitles .vjs-text-track-display {
     display: none !important;
 }
 
-/* Add a pointer cursor to the thumbnail area to indicate it's clickable */
+/* ===== INTERACTIVE ELEMENTS ===== */
+
+/* Clickable Thumbnail Areas */
 [data-testid^="season-list-item-"] .sc-2ae2f61a-4,
 li[itemtype="homePage"] .sc-2ae2f61a-4 {
     cursor: pointer;
+    transition: opacity var(--adn-transition-duration) ease;
 }
 
-/* PiP Button */
+[data-testid^="season-list-item-"] .sc-2ae2f61a-4:hover,
+li[itemtype="homePage"] .sc-2ae2f61a-4:hover {
+    opacity: 0.8;
+}
+
+/* ===== CONTROL BUTTONS ===== */
+
+/* Picture-in-Picture Button */
 .adn-improver-pip-button {
-    background: transparent;
+    background: var(--adn-control-bg);
     border: none;
-    color: white;
-    font-size: 18px;
-    margin-right: 10px;
+    color: var(--adn-control-color);
+    font-size: var(--adn-font-size-button);
+    margin-right: var(--adn-control-spacing);
     cursor: pointer;
+    transition: opacity var(--adn-transition-duration) ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.adn-improver-pip-button:hover {
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+/* Watched Episode Indicator */
+.is-watched {
+    opacity: 0.6;
+    position: relative;
+}
+
+.is-watched::after {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 149, 255, 0.9);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10;
 }
