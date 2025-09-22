@@ -5,10 +5,25 @@ body.adn-improver-theater-mode div[data-testid="main-content"] {
     width: 100% !important;
     max-width: 100% !important;
     padding-right: 0 !important;
+    margin-top: 3rem !important;
+    box-sizing: border-box !important;
 }
 
-/* Hide the sidebar and footer to maximize space */
-body.adn-improver-theater-mode aside[data-testid="relatedshowlist"],
+/* Force parent container to a vertical layout */
+body.adn-improver-theater-mode div[data-testid="default-layout"] > div {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Restyle the sidebar to be a full-width block below the main content */
+body.adn-improver-theater-mode aside[data-testid="relatedshowlist"] {
+    width: 100% !important;
+    margin-top: 3rem !important;
+    padding: 0 2rem !important; /* Add some horizontal padding */
+    box-sizing: border-box !important;
+}
+
+/* Hide the footer to maximize space */
 body.adn-improver-theater-mode footer {
     display: none !important;
 }
