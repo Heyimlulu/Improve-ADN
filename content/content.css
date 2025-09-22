@@ -92,26 +92,3 @@ li[itemtype="homePage"] .sc-2ae2f61a-4:hover {
 }
 
 
-/* Watched Episode Indicator */
-.is-watched {
-    opacity: 0.6;
-    position: relative;
-}
-
-.is-watched::after {
-    content: '✓';
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(0, 149, 255, 0.9);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 10;
-}

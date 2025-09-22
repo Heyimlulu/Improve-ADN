@@ -46,7 +46,6 @@ class ADNImproverState {
         this.settings = {};
         this.video = null;
         this.playerControls = null;
-        this.watchedEpisodes = new Set();
         this.observers = [];
         this.eventListeners = [];
     }
@@ -242,65 +241,6 @@ class UITweaksHandler {
 
 const uiTweaksHandler = new UITweaksHandler();
 
-/**
- * Watched Episodes Handler
- */
-class WatchedEpisodesHandler {
-    constructor() {
-        this.toggleWatched = this.toggleWatched.bind(this);
-    }
-
-    async saveWatchedEpisodes() {
-        try {
-            await chrome.storage.local.set({ 
-                watchedEpisodes: Array.from(appState.watchedEpisodes) 
-            });
-        } catch (error) {
-            console.warn('Failed to save watched episodes:', error);
-        }
-    }
-
-    toggleWatched(e) {
-        const thumbnailArea = e.target.closest(SELECTORS.THUMBNAIL_AREA);
-        if (!thumbnailArea) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-
-        const cardSelector = `${SELECTORS.SEASON_LIST_ITEM}, ${SELECTORS.HOME_PAGE_ITEM}`;
-        const card = e.target.closest(cardSelector);
-        const episodeUrl = card?.querySelector('a')?.href;
-        
-        if (!episodeUrl) return;
-
-        if (appState.watchedEpisodes.has(episodeUrl)) {
-            appState.watchedEpisodes.delete(episodeUrl);
-        } else {
-            appState.watchedEpisodes.add(episodeUrl);
-        }
-        
-        card.classList.toggle(CSS_CLASSES.WATCHED);
-        this.saveWatchedEpisodes();
-    }
-
-    initMarkAsWatched() {
-        const cardSelector = `${SELECTORS.SEASON_LIST_ITEM}, ${SELECTORS.HOME_PAGE_ITEM}`;
-        document.querySelectorAll(cardSelector).forEach(card => {
-            const episodeUrl = card.querySelector('a')?.href;
-            if (episodeUrl) {
-                card.classList.toggle(CSS_CLASSES.WATCHED, appState.watchedEpisodes.has(episodeUrl));
-            }
-            
-            // Ensure listener is only added once
-            if (!card.adnImproverListener) {
-                card.addEventListener('click', this.toggleWatched);
-                card.adnImproverListener = true;
-            }
-        });
-    }
-}
-
-const watchedEpisodesHandler = new WatchedEpisodesHandler();
 
 /**
  * Settings Manager
@@ -354,12 +294,6 @@ class ADNImproverApp {
             // Find video element and controls
             await this.findVideoElement();
             
-            // Load watched episodes
-            await this.loadWatchedEpisodes();
-            
-            // Setup observers
-            this.setupObservers();
-            
             // Load and apply settings
             await this.loadSettings();
             
@@ -395,28 +329,6 @@ class ADNImproverApp {
         });
     }
 
-    async loadWatchedEpisodes() {
-        try {
-            const localData = await chrome.storage.local.get(['watchedEpisodes']);
-            if (localData.watchedEpisodes) {
-                appState.watchedEpisodes = new Set(localData.watchedEpisodes);
-            }
-        } catch (error) {
-            console.warn('Failed to load watched episodes:', error);
-        }
-    }
-
-    setupObservers() {
-        // Setup Mark as Watched observer
-        const observer = new MutationObserver(() => {
-            watchedEpisodesHandler.initMarkAsWatched();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-        appState.observers.push(observer);
-        
-        // Initialize watched episodes
-        watchedEpisodesHandler.initMarkAsWatched();
-    }
 
     async loadSettings() {
         try {

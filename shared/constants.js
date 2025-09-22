@@ -41,8 +41,7 @@ export const CSS_CLASSES = {
     HIDE_SUBTITLES: 'adn-improver-hide-subtitles',
     FULLSCREEN: 'adn-improver-fullscreen',
     SPEED_CONTROL: 'adn-improver-speed-control',
-    PIP_BUTTON: 'adn-improver-pip-button',
-    WATCHED: 'is-watched'
+    PIP_BUTTON: 'adn-improver-pip-button'
 };
 
 // Playback speeds
@@ -57,7 +56,7 @@ export const TIMING = {
 
 // Storage keys
 export const STORAGE_KEYS = {
-    WATCHED_EPISODES: 'watchedEpisodes'
+    SETTINGS: 'settings'
 };
 
 // Error messages
