@@ -1,0 +1,156 @@
+:root {
+    --adn-blue: #0095FF;
+    --dark-bg: #04121A;
+    --light-bg: #1a2633;
+    --text-color: #ffffff;
+    --border-color: #2a3b4d;
+}
+
+body {
+    width: 380px;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.header {
+    background-color: var(--light-bg);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+h1 {
+    margin: 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+.main-content {
+    padding: 15px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.tab-link:hover {
+    background-color: var(--light-bg);
+}
+
+.tab-link.active {
+    color: var(--adn-blue);
+    border-bottom-color: var(--adn-blue);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* New styles for setting rows and switch toggles */
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    transition: .4s;
+    border-radius: 22px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--adn-blue);
+    border-color: var(--adn-blue);
+}
+
+input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+input[type="number"] {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 4px;
+    padding: 5px;
+    width: 70px;
+}
+
+button {
+    background-color: var(--adn-blue);
+    color: var(--text-color);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+    background-color: #007acc;
+}
+
+#manage button {
+    width: 100%;
+    margin-bottom: 10px;
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+}
+
+#manage button:hover {
+    background-color: #2a3b4d;
+}

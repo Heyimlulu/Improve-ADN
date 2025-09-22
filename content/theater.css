@@ -1,0 +1,40 @@
+/* --- Wide Player (Theater) Mode --- */
+
+/* Make the main content and player containers take up full width */
+body.adn-improver-theater-mode div[data-testid="main-content"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-right: 0 !important;
+}
+
+/* Hide the sidebar and footer to maximize space */
+body.adn-improver-theater-mode aside[data-testid="relatedshowlist"],
+body.adn-improver-theater-mode footer {
+    display: none !important;
+}
+
+/* Style the header for theater mode (hover-to-show) */
+body.adn-improver-theater-mode header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100000 !important;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out !important;
+}
+
+/* Show header when the visible class is applied */
+body.adn-improver-theater-mode header.adn-improver-header-visible {
+    transform: translateY(0);
+}
+
+/* Remove the top padding that creates a gap when the header is hidden */
+body.adn-improver-theater-mode div[data-testid="default-layout"] > div {
+    padding-top: 0 !important;
+}
+
+/* Fix for the invisible element above the logo that creates a gap */
+body.adn-improver-theater-mode .sc-3a023dc2-6.eWcwrl::before {
+    display: none !important;
+}

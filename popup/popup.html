@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ADN Improver</title>
+  <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+<body>
+    <div class="header">
+        <h1>ADN Improver</h1>
+    </div>
+    <div class="main-content">
+        <div class="tabs">
+            <button class="tab-link active" data-tab="general">General</button>
+            <button class="tab-link" data-tab="playback">Playback</button>
+            <button class="tab-link" data-tab="ui">UI</button>
+            <button class="tab-link" data-tab="manage">Manage</button>
+        </div>
+
+        <div id="general" class="tab-content active">
+            <div class="setting-row">
+                <span>Theater Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="theaterMode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="playback" class="tab-content">
+            <div class="setting-row">
+                <span>Playback Speed Control</span>
+                <label class="switch">
+                    <input type="checkbox" id="playbackSpeedControl">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Picture-in-Picture Button</span>
+                <label class="switch">
+                    <input type="checkbox" id="pipButton">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Maximize on Double-Click</span>
+                <label class="switch">
+                    <input type="checkbox" id="maximizeOnDoubleClick">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="ui" class="tab-content">
+            <div class="setting-row">
+                <span>Hide Thumbnails</span>
+                <label class="switch">
+                    <input type="checkbox" id="hideThumbnails">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Hide Scrollbar</span>
+                <label class="switch">
+                    <input type="checkbox" id="hideScrollbar">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Hide Player Dim Screen</span>
+                <label class="switch">
+                    <input type="checkbox" id="hidePlayerDim">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Hide Subtitles</span>
+                <label class="switch">
+                    <input type="checkbox" id="hideSubtitles">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="manage" class="tab-content">
+            <button id="backup">Backup Settings</button>
+            <button id="restore">Restore Settings</button>
+            <input type="file" id="restore-input" style="display: none;">
+            <button id="reset">Reset All Settings</button>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
