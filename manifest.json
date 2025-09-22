@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ADN Improver",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Enhances the ADN Streaming experience with new features.",
   "permissions": [
     "storage"
@@ -17,9 +17,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://animationdigitalnetwork.com/*"],
-      "js": ["content/content.js"],
-      "css": ["content/content.css", "content/theater.css"]
+      "matches": [
+        "https://animationdigitalnetwork.com/*"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css",
+        "content/theater.css"
+      ]
     }
   ],
   "icons": {
