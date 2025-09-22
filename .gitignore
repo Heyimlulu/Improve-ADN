@@ -1,0 +1,10 @@
+# Dependencies
+/node_modules
+
+# Build artifacts
+/dist
+
+# IDE & OS files
+.vscode/
+.DS_Store
+npm-debug.log
