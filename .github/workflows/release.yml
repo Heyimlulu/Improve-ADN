@@ -35,18 +35,38 @@ jobs:
       - name: Build extension
         run: npm run build
 
-      - name: Commit and push changes
+      - name: Commit, Tag, and Push Changes
+        id: versioning
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'github-actions@github.com'
           git add package.json manifest.json
-          # Get the new version from package.json
+          # Get the new version from package.json and set it as an output
           NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           git commit -m "Bump version to v$NEW_VERSION"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push
+          git push --tags
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: adn-improver-build
-          path: dist/*.zip
+          tag_name: v${{ steps.versioning.outputs.new_version }}
+          release_name: Release v${{ steps.versioning.outputs.new_version }}
+          body: "Official release for version v${{ steps.versioning.outputs.new_version }}"
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/adn-improver-v${{ steps.versioning.outputs.new_version }}.zip
+          asset_name: adn-improver-v${{ steps.versioning.outputs.new_version }}.zip
+          asset_content_type: application/zip
