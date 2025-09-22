@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "description": "Build script for ADN Improver extension",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "version:patch": "node scripts/version.js patch",
+    "version:minor": "node scripts/version.js minor",
+    "version:major": "node scripts/version.js major"
   },
   "devDependencies": {
-    "archiver": "^5.3.1"
+    "archiver": "^5.3.1",
+    "semver": "^7.3.5"
   }
 }
