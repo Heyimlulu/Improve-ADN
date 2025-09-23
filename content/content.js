@@ -1,68 +1,136 @@
-// Import constants (Note: In manifest v3, we'll need to use dynamic imports or inline constants)
-// For now, we'll define constants inline to maintain compatibility
-const DEFAULT_SETTINGS = {
-    theaterMode: false,
-    hideComments: true,
-    hideLastVideos: true,
-    hideEpisodeSummary: true,
-    playbackSpeedControl: true,
-    hideThumbnails: false,
-    hideScrollbar: false,   
-    hidePlayerDim: false,
-    hideSubtitles: false,
-    pipButton: true,
-    maximizeOnDoubleClick: true
-};
+// Import shared constants from the constants file
+let DEFAULT_SETTINGS, SELECTORS, CSS_CLASSES, PLAYBACK_SPEEDS, TIMING, 
+    EPISODE_SUMMARY_CONTAINERS, TEXT_CONTENT, VIDEO_SAFETY_SELECTORS;
 
-const SELECTORS = {
-    VIDEO: 'video',
-    PLAYER_CONTAINER: '.video-js',
-    CONTROL_BAR: '.vjs-control-bar',
-    HEADER: 'header',
-    SEASON_LIST_ITEM: '[data-testid^="season-list-item-"]',
-    HOMEPAGE_ITEM: 'li[itemtype="homePage"]',
-    THUMBNAIL_AREA: '.sc-2ae2f61a-4',
-    // Theater mode selectors with fallbacks
-    MAIN_CONTENT: [
-        '[data-testid="main-content"]',
-        'main',
-        '.main-content',
-        '[class*="main"]',
-        '[class*="content"]:not(aside):not(nav):not(header):not(footer)'
-    ],
-    LAYOUT_CONTAINER: [
-        '[data-testid="default-layout"]',
-        '.default-layout',
-        '[class*="layout"]',
-        '.container',
-        'main'
-    ],
-    SIDEBAR: [
-        '[data-testid="relatedshowlist"]',
-        'aside',
-        '.sidebar',
-        '[class*="related"]',
-        '[class*="sidebar"]'
-    ]
-};
+// Initialize constants from shared file
+async function initializeConstants() {
+    try {
+        const constants = await import(chrome.runtime.getURL('shared/constants.js'));
+        DEFAULT_SETTINGS = constants.DEFAULT_SETTINGS;
+        SELECTORS = constants.SELECTORS;
+        CSS_CLASSES = constants.CSS_CLASSES;
+        PLAYBACK_SPEEDS = constants.PLAYBACK_SPEEDS;
+        TIMING = constants.TIMING;
+        EPISODE_SUMMARY_CONTAINERS = constants.EPISODE_SUMMARY_CONTAINERS;
+        TEXT_CONTENT = constants.TEXT_CONTENT;
+        VIDEO_SAFETY_SELECTORS = constants.VIDEO_SAFETY_SELECTORS;
+        
+        console.log('ADN Improver: Constants loaded successfully');
+    } catch (error) {
+        console.error('ADN Improver: Failed to load constants, using fallback', error);
+        // Fallback constants in case import fails
+        initializeFallbackConstants();
+    }
+}
 
-const CSS_CLASSES = {
-    THEATER_MODE: 'adn-improver-theater-mode',
-    HEADER_VISIBLE: 'adn-improver-header-visible',
-    HIDE_THUMBNAILS: 'adn-improver-hide-thumbnails',
-    HIDE_SCROLLBAR: 'adn-improver-hide-scrollbar',
-    HIDE_PLAYER_DIM: 'adn-improver-hide-player-dim',
-    HIDE_SUBTITLES: 'adn-improver-hide-subtitles',
-    FULLSCREEN: 'adn-improver-fullscreen',
-    SPEED_CONTROL: 'adn-improver-speed-control',
-    PIP_BUTTON: 'adn-improver-pip-button',
-    WATCHED: 'is-watched'
-};
+function initializeFallbackConstants() {
+    DEFAULT_SETTINGS = {
+        theaterMode: false,
+        hideComments: true,
+        hideLastVideos: true,
+        hideEpisodeSummary: true,
+        playbackSpeedControl: true,
+        hideThumbnails: false,
+        hideScrollbar: false,
+        hidePlayerDim: false,
+        hideSubtitles: false,
+        pipButton: true,
+        maximizeOnDoubleClick: true
+    };
+    
+    SELECTORS = {
+        VIDEO: 'video',
+        PLAYER_CONTAINER: '.video-js',
+        CONTROL_BAR: '.vjs-control-bar',
+        HEADER: 'header',
+        THEATER_MAIN_CONTENT: ['[data-testid="main-content"]', 'main'],
+        THEATER_LAYOUT_CONTAINER: ['[data-testid="default-layout"]', '.default-layout'],
+        THEATER_SIDEBAR: ['[data-testid="relatedshowlist"]', 'aside'],
+        COMMENTS_PANEL: 'section[data-testid="comments-panel"], #comments-panel',
+        LAST_VIDEOS: 'div[data-testid="last-videos"]',
+        EPISODE_SUMMARY_TITLE: 'h2 span'
+    };
+    
+    CSS_CLASSES = {
+        THEATER_MODE: 'adn-improver-theater-mode',
+        HEADER_VISIBLE: 'adn-improver-header-visible',
+        HIDE_THUMBNAILS: 'adn-improver-hide-thumbnails',
+        HIDE_SCROLLBAR: 'adn-improver-hide-scrollbar',
+        HIDE_PLAYER_DIM: 'adn-improver-hide-player-dim',
+        HIDE_SUBTITLES: 'adn-improver-hide-subtitles',
+        FULLSCREEN: 'adn-improver-fullscreen',
+        SPEED_CONTROL: 'adn-improver-speed-control',
+        PIP_BUTTON: 'adn-improver-pip-button',
+        WATCHED: 'is-watched'
+    };
+    
+    PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+    TIMING = { VIDEO_SEARCH_INTERVAL: 500, HEADER_HIDE_THRESHOLD: 60 };
+    EPISODE_SUMMARY_CONTAINERS = ['.sc-b8623451-0.jLepGa', '.sc-b8623451-0'];
+    TEXT_CONTENT = { EPISODE_SUMMARY_TITLE: 'Résumé de l\'épisode' };
+    VIDEO_SAFETY_SELECTORS = ['.video-js', '[class*="video"]', '[class*="player"]'];
+}
 
-const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
-const TIMING = {
-    VIDEO_SEARCH_INTERVAL: 500,
-    HEADER_HIDE_THRESHOLD: 60
+// Utility functions
+const Utils = {
+    /**
+     * Find element using fallback selectors
+     * @param {string[]} selectors - Array of selectors to try
+     * @param {string} elementType - Type of element for logging
+     * @returns {Element|null} - Found element or null
+     */
+    findElementWithFallback(selectors, elementType = 'element') {
+        for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                console.log(`Found ${elementType} using selector: ${selector}`);
+                return element;
+            }
+        }
+        console.warn(`No ${elementType} found with any selector`);
+        return null;
+    },
+
+    /**
+     * Check if element is safe to hide (not video-related)
+     * @param {Element} element - Element to check
+     * @returns {boolean} - True if safe to hide
+     */
+    isElementSafeToHide(element) {
+        return !element.classList.contains('video-js') && 
+               !element.closest('.video-js') &&
+               !element.querySelector('.video-js') &&
+               !element.querySelector('video') &&
+               !VIDEO_SAFETY_SELECTORS.some(selector => 
+                   element.closest(selector) || element.querySelector(selector)
+               );
+    },
+
+    /**
+     * Apply styles to element with error handling
+     * @param {Element} element - Element to style
+     * @param {Object} styles - Styles to apply
+     */
+    applyStyles(element, styles) {
+        if (!element) return;
+        
+        Object.entries(styles).forEach(([property, value]) => {
+            element.style.setProperty(property, value, 'important');
+        });
+    },
+
+    /**
+     * Remove styles from element
+     * @param {Element} element - Element to clean
+     * @param {string[]} properties - Properties to remove
+     */
+    removeStyles(element, properties) {
+        if (!element) return;
+        
+        properties.forEach(property => {
+            element.style.removeProperty(property);
+        });
+    }
 };
 
 // Application state
@@ -122,26 +190,32 @@ class TheaterModeHandler {
     }
 
     detectAndCacheElements() {
-        // Detect main content element using fallback selectors
-        this.detectedElements.set('mainContent', this.findElementBySelectors(SELECTORS.MAIN_CONTENT));
-        this.detectedElements.set('layoutContainer', this.findElementBySelectors(SELECTORS.LAYOUT_CONTAINER));
-        this.detectedElements.set('sidebar', this.findElementBySelectors(SELECTORS.SIDEBAR));
-        
-        console.log('Theater mode elements detected:', {
-            mainContent: this.detectedElements.get('mainContent')?.tagName,
-            layoutContainer: this.detectedElements.get('layoutContainer')?.tagName,
-            sidebar: this.detectedElements.get('sidebar')?.tagName
-        });
-    }
-
-    findElementBySelectors(selectorArray) {
-        for (const selector of selectorArray) {
-            const element = document.querySelector(selector);
-            if (element) {
-                return element;
-            }
+        // Detect main content area with fallback selectors
+        const mainContent = Utils.findElementWithFallback(
+            SELECTORS.THEATER_MAIN_CONTENT, 
+            'main content'
+        );
+        if (mainContent) {
+            this.detectedElements.set('mainContent', mainContent);
         }
-        return null;
+
+        // Detect layout container with fallback selectors
+        const layoutContainer = Utils.findElementWithFallback(
+            SELECTORS.THEATER_LAYOUT_CONTAINER, 
+            'layout container'
+        );
+        if (layoutContainer) {
+            this.detectedElements.set('layoutContainer', layoutContainer);
+        }
+
+        // Detect sidebar with fallback selectors
+        const sidebar = Utils.findElementWithFallback(
+            SELECTORS.THEATER_SIDEBAR, 
+            'sidebar'
+        );
+        if (sidebar) {
+            this.detectedElements.set('sidebar', sidebar);
+        }
     }
 
     applyTheaterModeStyles() {
@@ -191,7 +265,7 @@ class TheaterModeHandler {
     hideTheaterModeElements() {
         // Hide comments panel if setting is enabled
         if (appState.settings.hideComments) {
-            const commentsPanel = document.querySelector('section[data-testid="comments-panel"], #comments-panel');
+            const commentsPanel = document.querySelector(SELECTORS.COMMENTS_PANEL);
             if (commentsPanel) {
                 commentsPanel.style.setProperty('display', 'none', 'important');
             }
@@ -199,7 +273,7 @@ class TheaterModeHandler {
 
         // Hide last videos section if setting is enabled
         if (appState.settings.hideLastVideos) {
-            const lastVideos = document.querySelector('div[data-testid="last-videos"]');
+            const lastVideos = document.querySelector(SELECTORS.LAST_VIDEOS);
             if (lastVideos) {
                 lastVideos.style.setProperty('display', 'none', 'important');
             }
@@ -207,60 +281,60 @@ class TheaterModeHandler {
 
         // Hide episode summary if setting is enabled
         if (appState.settings.hideEpisodeSummary) {
-            // Find h2 > span with "Résumé de l'épisode" text and hide the outer container
-            const h2Elements = document.querySelectorAll('h2 span');
-            h2Elements.forEach(span => {
-                if (span.textContent && span.textContent.trim() === "Résumé de l'épisode") {
-                    // Find the outermost container (.sc-b8623451-0.jLepGa)
-                    let containerToHide = span.closest('.sc-b8623451-0.jLepGa') ||
-                                        span.closest('.sc-b8623451-0') ||
-                                        span.closest('div[class*="w-[320px]"]') ||
-                                        span.closest('div[class*="inline-block"]');
-                    
-                    if (containerToHide && 
-                        !containerToHide.classList.contains('video-js') && 
-                        !containerToHide.closest('.video-js') &&
-                        !containerToHide.querySelector('.video-js') &&
-                        !containerToHide.querySelector('video') &&
-                        !containerToHide.closest('[class*="video"]') &&
-                        !containerToHide.closest('[class*="player"]')) {
-                        containerToHide.style.setProperty('display', 'none', 'important');
-                    }
-                }
-            });
+            this.hideEpisodeSummary();
         }
+    }
+
+    hideEpisodeSummary() {
+        // Find h2 > span with episode summary title and hide the outer container
+        const titleElements = document.querySelectorAll(SELECTORS.EPISODE_SUMMARY_TITLE);
+        titleElements.forEach(span => {
+            if (span.textContent && span.textContent.trim() === TEXT_CONTENT.EPISODE_SUMMARY_TITLE) {
+                // Find the outermost container using hierarchical selectors
+                const containerToHide = this.findEpisodeSummaryContainer(span);
+                
+                if (containerToHide && Utils.isElementSafeToHide(containerToHide)) {
+                    containerToHide.style.setProperty('display', 'none', 'important');
+                }
+            }
+        });
+    }
+
+    findEpisodeSummaryContainer(span) {
+        // Find container using hierarchical priority
+        for (const selector of EPISODE_SUMMARY_CONTAINERS) {
+            const container = span.closest(selector);
+            if (container) return container;
+        }
+        return null;
     }
 
     showTheaterModeElements() {
         // Show comments panel
-        const commentsPanel = document.querySelector('section[data-testid="comments-panel"], #comments-panel');
+        const commentsPanel = document.querySelector(SELECTORS.COMMENTS_PANEL);
         if (commentsPanel) {
             commentsPanel.style.removeProperty('display');
         }
 
         // Show last videos section
-        const lastVideos = document.querySelector('div[data-testid="last-videos"]');
+        const lastVideos = document.querySelector(SELECTORS.LAST_VIDEOS);
         if (lastVideos) {
             lastVideos.style.removeProperty('display');
         }
 
-        // Show episode summary by finding h2 > span with "Résumé de l'épisode" text
-        const h2Elements = document.querySelectorAll('h2 span');
-        h2Elements.forEach(span => {
-            if (span.textContent && span.textContent.trim() === "Résumé de l'épisode") {
-                // Find the outermost container (.sc-b8623451-0.jLepGa)
-                let containerToShow = span.closest('.sc-b8623451-0.jLepGa') ||
-                                    span.closest('.sc-b8623451-0') ||
-                                    span.closest('div[class*="w-[320px]"]') ||
-                                    span.closest('div[class*="inline-block"]');
+        // Show episode summary
+        this.showEpisodeSummary();
+    }
+
+    showEpisodeSummary() {
+        // Find h2 > span with episode summary title and show the outer container
+        const titleElements = document.querySelectorAll(SELECTORS.EPISODE_SUMMARY_TITLE);
+        titleElements.forEach(span => {
+            if (span.textContent && span.textContent.trim() === TEXT_CONTENT.EPISODE_SUMMARY_TITLE) {
+                // Find the outermost container using hierarchical selectors
+                const containerToShow = this.findEpisodeSummaryContainer(span);
                 
-                if (containerToShow && 
-                    !containerToShow.classList.contains('video-js') && 
-                    !containerToShow.closest('.video-js') &&
-                    !containerToShow.querySelector('.video-js') &&
-                    !containerToShow.querySelector('video') &&
-                    !containerToShow.closest('[class*="video"]') &&
-                    !containerToShow.closest('[class*="player"]')) {
+                if (containerToShow && Utils.isElementSafeToHide(containerToShow)) {
                     containerToShow.style.removeProperty('display');
                 }
             }
@@ -525,6 +599,9 @@ const settingsManager = new SettingsManager();
 class ADNImproverApp {
     async init() {
         try {
+            // Initialize constants first
+            await initializeConstants();
+            
             // Find video element and controls
             await this.findVideoElement();
             

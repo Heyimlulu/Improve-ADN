@@ -2,36 +2,60 @@
  * ADN Improver Popup Settings Manager
  */
 
-// Default settings (shared with content script)
-const DEFAULT_SETTINGS = {
-    theaterMode: false,
-    hideComments: true,
-    hideLastVideos: true,
-    hideEpisodeSummary: true,
-    playbackSpeedControl: true,
-    hideThumbnails: false,
-    hideScrollbar: false,
-    hidePlayerDim: false,
-    hideSubtitles: false,
-    pipButton: true,
-    maximizeOnDoubleClick: true
-};
+// Import shared constants
+let DEFAULT_SETTINGS, SETTING_KEYS;
 
-// Settings that should be saved/restored
-const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
+// Initialize constants from shared file
+async function initializeConstants() {
+    try {
+        const constants = await import(chrome.runtime.getURL('shared/constants.js'));
+        DEFAULT_SETTINGS = constants.DEFAULT_SETTINGS;
+        SETTING_KEYS = constants.SETTING_KEYS;
+        console.log('Popup: Constants loaded successfully');
+    } catch (error) {
+        console.error('Popup: Failed to load constants, using fallback', error);
+        // Fallback constants
+        DEFAULT_SETTINGS = {
+            theaterMode: false,
+            hideComments: true,
+            hideLastVideos: true,
+            hideEpisodeSummary: true,
+            playbackSpeedControl: true,
+            hideThumbnails: false,
+            hideScrollbar: false,
+            hidePlayerDim: false,
+            hideSubtitles: false,
+            pipButton: true,
+            maximizeOnDoubleClick: true
+        };
+        SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
+    }
+}
 
 /**
  * Settings Manager Class
  */
 class PopupSettingsManager {
     constructor() {
-        this.initializeEventListeners();
+        this.initialized = false;
+    }
+
+    /**
+     * Initialize the settings manager after constants are loaded
+     */
+    async initialize() {
+        if (this.initialized) return;
+        
+        this.setupAutoSave();
+        this.initialized = true;
     }
 
     /**
      * Save all settings to chrome storage
      */
     async saveSettings() {
+        if (!SETTING_KEYS) return;
+        
         try {
             const settings = {};
             
@@ -57,6 +81,8 @@ class PopupSettingsManager {
      * Restore settings from chrome storage
      */
     async restoreSettings() {
+        if (!DEFAULT_SETTINGS || !SETTING_KEYS) return;
+        
         try {
             const items = await chrome.storage.sync.get(DEFAULT_SETTINGS);
             
@@ -83,6 +109,8 @@ class PopupSettingsManager {
      * Apply default settings to UI elements
      */
     applyDefaultSettings() {
+        if (!DEFAULT_SETTINGS || !SETTING_KEYS) return;
+        
         SETTING_KEYS.forEach(key => {
             const element = document.getElementById(key);
             if (element && DEFAULT_SETTINGS.hasOwnProperty(key)) {
@@ -96,23 +124,11 @@ class PopupSettingsManager {
     }
 
     /**
-     * Initialize event listeners for auto-save
-     */
-    initializeEventListeners() {
-        // Wait for DOM to be ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setupAutoSave();
-            });
-        } else {
-            this.setupAutoSave();
-        }
-    }
-
-    /**
      * Setup auto-save functionality
      */
     setupAutoSave() {
+        if (!SETTING_KEYS) return;
+        
         SETTING_KEYS.forEach(key => {
             const element = document.getElementById(key);
             if (element) {
@@ -164,6 +180,12 @@ class TabManager {
 // Initialize components when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Initialize constants first
+        await initializeConstants();
+        
+        // Initialize settings manager after constants are loaded
+        await settingsManager.initialize();
+        
         // Initialize tab management
         new TabManager();
         

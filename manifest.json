@@ -29,6 +29,12 @@
       ]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["shared/constants.js"],
+      "matches": ["https://animationdigitalnetwork.com/*"]
+    }
+  ],
   "icons": {
     "64": "icons/icon-64x64.png"
   }
