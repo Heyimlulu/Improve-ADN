@@ -1,26 +1,80 @@
 /* --- Wide Player (Theater) Mode --- */
 
-/* Make the main content and player containers take up full width */
-body.adn-improver-theater-mode div[data-testid="main-content"] {
+/* Optimized theater mode for comfortable viewing */
+body.adn-improver-theater-mode {
+    /* Video player with proper aspect ratio matching container */
+    .video-js {
+        width: 100% !important;
+        max-width: none !important; /* Remove max-width constraint */
+        height: auto !important;
+        margin: 0 auto !important; /* Center the video */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important; /* Add subtle shadow */
+        aspect-ratio: 16/9 !important; /* Maintain 16:9 aspect ratio */
+        object-fit: contain !important; /* Prevent stretching */
+    }
+    
+    /* Ensure the video element inside maintains aspect ratio */
+    .video-js video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Prevent stretching of video content */
+    }
+    
+    /* Make main content area full width but with some breathing room */
+    div[data-testid="main-content"],
+    main,
+    .main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 2rem !important; /* Add some horizontal padding for comfort */
+        box-sizing: border-box !important;
+    }
+    
+    /* Add some top margin to create space from header */
+    .video-js {
+        margin-top: 1rem !important;
+    }
+}
+
+/* Move sidebar below the main content with better spacing */
+body.adn-improver-theater-mode aside {
     width: 100% !important;
-    max-width: 100% !important;
-    padding-right: 0 !important;
-    margin-top: 3rem !important;
+    max-width: none !important; /* Match video width - no constraint */
+    margin: 2rem auto 0 auto !important; /* Center and add top margin */
+    padding: 0 2rem !important; /* Match main content padding */
     box-sizing: border-box !important;
 }
 
-/* Force parent container to a vertical layout */
-body.adn-improver-theater-mode div[data-testid="default-layout"] > div {
-    display: flex !important;
-    flex-direction: column !important;
+/* Responsive adjustments for different screen sizes */
+@media (max-width: 1200px) {
+    body.adn-improver-theater-mode div[data-testid="main-content"],
+    body.adn-improver-theater-mode main,
+    body.adn-improver-theater-mode .main-content {
+        padding: 0 1rem !important;
+    }
+    
+    body.adn-improver-theater-mode aside {
+        padding: 0 1rem !important;
+    }
 }
 
-/* Restyle the sidebar to be a full-width block below the main content */
-body.adn-improver-theater-mode aside[data-testid="relatedshowlist"] {
-    width: 100% !important;
-    margin-top: 3rem !important;
-    padding: 0 2rem !important; /* Add some horizontal padding */
-    box-sizing: border-box !important;
+@media (max-width: 768px) {
+    body.adn-improver-theater-mode .video-js {
+        margin: 0.5rem auto !important;
+        box-shadow: none !important; /* Remove shadow on mobile */
+    }
+    
+    body.adn-improver-theater-mode div[data-testid="main-content"],
+    body.adn-improver-theater-mode main,
+    body.adn-improver-theater-mode .main-content {
+        padding: 0 0.5rem !important;
+    }
+    
+    body.adn-improver-theater-mode aside {
+        padding: 0 0.5rem !important;
+        margin-top: 1rem auto 0 auto !important;
+    }
 }
 
 /* Hide the footer to maximize space */
@@ -44,12 +98,3 @@ body.adn-improver-theater-mode header.adn-improver-header-visible {
     transform: translateY(0);
 }
 
-/* Remove the top padding that creates a gap when the header is hidden */
-body.adn-improver-theater-mode div[data-testid="default-layout"] > div {
-    padding-top: 0 !important;
-}
-
-/* Fix for the invisible element above the logo that creates a gap */
-body.adn-improver-theater-mode .sc-3a023dc2-6.eWcwrl::before {
-    display: none !important;
-}

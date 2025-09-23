@@ -17,8 +17,30 @@ const SELECTORS = {
     CONTROL_BAR: '.vjs-control-bar',
     HEADER: 'header',
     SEASON_LIST_ITEM: '[data-testid^="season-list-item-"]',
-    HOME_PAGE_ITEM: 'li[itemtype="homePage"]',
-    THUMBNAIL_AREA: '.sc-2ae2f61a-4'
+    HOMEPAGE_ITEM: 'li[itemtype="homePage"]',
+    THUMBNAIL_AREA: '.sc-2ae2f61a-4',
+    // Theater mode selectors with fallbacks
+    MAIN_CONTENT: [
+        '[data-testid="main-content"]',
+        'main',
+        '.main-content',
+        '[class*="main"]',
+        '[class*="content"]:not(aside):not(nav):not(header):not(footer)'
+    ],
+    LAYOUT_CONTAINER: [
+        '[data-testid="default-layout"]',
+        '.default-layout',
+        '[class*="layout"]',
+        '.container',
+        'main'
+    ],
+    SIDEBAR: [
+        '[data-testid="relatedshowlist"]',
+        'aside',
+        '.sidebar',
+        '[class*="related"]',
+        '[class*="sidebar"]'
+    ]
 };
 
 const CSS_CLASSES = {
@@ -78,16 +100,128 @@ const appState = new ADNImproverState();
 class TheaterModeHandler {
     constructor() {
         this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.detectedElements = new Map();
     }
 
     toggle(enabled) {
         document.body.classList.toggle(CSS_CLASSES.THEATER_MODE, enabled);
         if (enabled) {
+            this.detectAndCacheElements();
             appState.addEventListenerTracked(document, 'mousemove', this.handleMouseMove);
+            this.applyTheaterModeStyles();
         } else {
             document.removeEventListener('mousemove', this.handleMouseMove);
             document.querySelector(SELECTORS.HEADER)?.classList.remove(CSS_CLASSES.HEADER_VISIBLE);
+            this.removeTheaterModeStyles();
         }
+    }
+
+    detectAndCacheElements() {
+        // Detect main content element using fallback selectors
+        this.detectedElements.set('mainContent', this.findElementBySelectors(SELECTORS.MAIN_CONTENT));
+        this.detectedElements.set('layoutContainer', this.findElementBySelectors(SELECTORS.LAYOUT_CONTAINER));
+        this.detectedElements.set('sidebar', this.findElementBySelectors(SELECTORS.SIDEBAR));
+        
+        console.log('Theater mode elements detected:', {
+            mainContent: this.detectedElements.get('mainContent')?.tagName,
+            layoutContainer: this.detectedElements.get('layoutContainer')?.tagName,
+            sidebar: this.detectedElements.get('sidebar')?.tagName
+        });
+    }
+
+    findElementBySelectors(selectorArray) {
+        for (const selector of selectorArray) {
+            const element = document.querySelector(selector);
+            if (element) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    applyTheaterModeStyles() {
+        // Optimized theater mode with container-matching width
+        const videoPlayer = document.querySelector('.video-js');
+        if (videoPlayer) {
+            videoPlayer.style.setProperty('width', '100%', 'important');
+            videoPlayer.style.setProperty('max-width', 'none', 'important');
+            videoPlayer.style.setProperty('height', 'auto', 'important');
+            videoPlayer.style.setProperty('margin', '1rem auto', 'important');
+            videoPlayer.style.setProperty('box-shadow', '0 4px 20px rgba(0, 0, 0, 0.3)', 'important');
+            videoPlayer.style.setProperty('aspect-ratio', '16/9', 'important');
+            videoPlayer.style.setProperty('object-fit', 'contain', 'important');
+            
+            // Also apply to the video element inside
+            const videoElement = videoPlayer.querySelector('video');
+            if (videoElement) {
+                videoElement.style.setProperty('width', '100%', 'important');
+                videoElement.style.setProperty('height', '100%', 'important');
+                videoElement.style.setProperty('object-fit', 'contain', 'important');
+            }
+        }
+
+        // Apply comfortable layout changes to detected elements
+        const mainContent = this.detectedElements.get('mainContent');
+        if (mainContent) {
+            mainContent.style.setProperty('width', '100%', 'important');
+            mainContent.style.setProperty('max-width', '100%', 'important');
+            mainContent.style.setProperty('margin', '0', 'important');
+            mainContent.style.setProperty('padding', '0 2rem', 'important');
+            mainContent.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+
+        const sidebar = this.detectedElements.get('sidebar');
+        if (sidebar) {
+            sidebar.style.setProperty('width', '100%', 'important');
+            sidebar.style.setProperty('max-width', 'none', 'important');
+            sidebar.style.setProperty('margin', '2rem auto 0 auto', 'important');
+            sidebar.style.setProperty('padding', '0 2rem', 'important');
+            sidebar.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+    }
+
+    removeTheaterModeStyles() {
+        // Restore video player styles
+        const videoPlayer = document.querySelector('.video-js');
+        if (videoPlayer) {
+            videoPlayer.style.removeProperty('width');
+            videoPlayer.style.removeProperty('max-width');
+            videoPlayer.style.removeProperty('height');
+            videoPlayer.style.removeProperty('margin');
+            videoPlayer.style.removeProperty('box-shadow');
+            videoPlayer.style.removeProperty('aspect-ratio');
+            videoPlayer.style.removeProperty('object-fit');
+            
+            // Also restore the video element inside
+            const videoElement = videoPlayer.querySelector('video');
+            if (videoElement) {
+                videoElement.style.removeProperty('width');
+                videoElement.style.removeProperty('height');
+                videoElement.style.removeProperty('object-fit');
+            }
+        }
+
+        // Restore main content
+        const mainContent = this.detectedElements.get('mainContent');
+        if (mainContent) {
+            mainContent.style.removeProperty('width');
+            mainContent.style.removeProperty('max-width');
+            mainContent.style.removeProperty('margin');
+            mainContent.style.removeProperty('padding');
+            mainContent.style.removeProperty('box-sizing');
+        }
+
+        // Restore sidebar
+        const sidebar = this.detectedElements.get('sidebar');
+        if (sidebar) {
+            sidebar.style.removeProperty('width');
+            sidebar.style.removeProperty('max-width');
+            sidebar.style.removeProperty('margin');
+            sidebar.style.removeProperty('padding');
+            sidebar.style.removeProperty('box-sizing');
+        }
+
+        this.detectedElements.clear();
     }
 
     handleMouseMove(e) {
