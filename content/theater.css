@@ -35,6 +35,8 @@ body.adn-improver-theater-mode {
     .video-js {
         margin-top: 1rem !important;
     }
+    
+    /* Theater mode element hiding is now controlled by JavaScript settings */
 }
 
 /* Move sidebar below the main content with better spacing */

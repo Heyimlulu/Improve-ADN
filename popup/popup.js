@@ -5,6 +5,9 @@
 // Default settings (shared with content script)
 const DEFAULT_SETTINGS = {
     theaterMode: false,
+    hideComments: true,
+    hideLastVideos: true,
+    hideEpisodeSummary: true,
     playbackSpeedControl: true,
     hideThumbnails: false,
     hideScrollbar: false,

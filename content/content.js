@@ -2,9 +2,12 @@
 // For now, we'll define constants inline to maintain compatibility
 const DEFAULT_SETTINGS = {
     theaterMode: false,
+    hideComments: true,
+    hideLastVideos: true,
+    hideEpisodeSummary: true,
     playbackSpeedControl: true,
     hideThumbnails: false,
-    hideScrollbar: false,
+    hideScrollbar: false,   
     hidePlayerDim: false,
     hideSubtitles: false,
     pipButton: true,
@@ -101,9 +104,11 @@ class TheaterModeHandler {
     constructor() {
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.detectedElements = new Map();
+        this.isActive = false;
     }
 
     toggle(enabled) {
+        this.isActive = enabled;
         document.body.classList.toggle(CSS_CLASSES.THEATER_MODE, enabled);
         if (enabled) {
             this.detectAndCacheElements();
@@ -178,6 +183,88 @@ class TheaterModeHandler {
             sidebar.style.setProperty('padding', '0 2rem', 'important');
             sidebar.style.setProperty('box-sizing', 'border-box', 'important');
         }
+
+        // Hide additional content sections in theater mode
+        this.hideTheaterModeElements();
+    }
+
+    hideTheaterModeElements() {
+        // Hide comments panel if setting is enabled
+        if (appState.settings.hideComments) {
+            const commentsPanel = document.querySelector('section[data-testid="comments-panel"], #comments-panel');
+            if (commentsPanel) {
+                commentsPanel.style.setProperty('display', 'none', 'important');
+            }
+        }
+
+        // Hide last videos section if setting is enabled
+        if (appState.settings.hideLastVideos) {
+            const lastVideos = document.querySelector('div[data-testid="last-videos"]');
+            if (lastVideos) {
+                lastVideos.style.setProperty('display', 'none', 'important');
+            }
+        }
+
+        // Hide episode summary if setting is enabled
+        if (appState.settings.hideEpisodeSummary) {
+            // Find h2 > span with "Résumé de l'épisode" text and hide the outer container
+            const h2Elements = document.querySelectorAll('h2 span');
+            h2Elements.forEach(span => {
+                if (span.textContent && span.textContent.trim() === "Résumé de l'épisode") {
+                    // Find the outermost container (.sc-b8623451-0.jLepGa)
+                    let containerToHide = span.closest('.sc-b8623451-0.jLepGa') ||
+                                        span.closest('.sc-b8623451-0') ||
+                                        span.closest('div[class*="w-[320px]"]') ||
+                                        span.closest('div[class*="inline-block"]');
+                    
+                    if (containerToHide && 
+                        !containerToHide.classList.contains('video-js') && 
+                        !containerToHide.closest('.video-js') &&
+                        !containerToHide.querySelector('.video-js') &&
+                        !containerToHide.querySelector('video') &&
+                        !containerToHide.closest('[class*="video"]') &&
+                        !containerToHide.closest('[class*="player"]')) {
+                        containerToHide.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            });
+        }
+    }
+
+    showTheaterModeElements() {
+        // Show comments panel
+        const commentsPanel = document.querySelector('section[data-testid="comments-panel"], #comments-panel');
+        if (commentsPanel) {
+            commentsPanel.style.removeProperty('display');
+        }
+
+        // Show last videos section
+        const lastVideos = document.querySelector('div[data-testid="last-videos"]');
+        if (lastVideos) {
+            lastVideos.style.removeProperty('display');
+        }
+
+        // Show episode summary by finding h2 > span with "Résumé de l'épisode" text
+        const h2Elements = document.querySelectorAll('h2 span');
+        h2Elements.forEach(span => {
+            if (span.textContent && span.textContent.trim() === "Résumé de l'épisode") {
+                // Find the outermost container (.sc-b8623451-0.jLepGa)
+                let containerToShow = span.closest('.sc-b8623451-0.jLepGa') ||
+                                    span.closest('.sc-b8623451-0') ||
+                                    span.closest('div[class*="w-[320px]"]') ||
+                                    span.closest('div[class*="inline-block"]');
+                
+                if (containerToShow && 
+                    !containerToShow.classList.contains('video-js') && 
+                    !containerToShow.closest('.video-js') &&
+                    !containerToShow.querySelector('.video-js') &&
+                    !containerToShow.querySelector('video') &&
+                    !containerToShow.closest('[class*="video"]') &&
+                    !containerToShow.closest('[class*="player"]')) {
+                    containerToShow.style.removeProperty('display');
+                }
+            }
+        });
     }
 
     removeTheaterModeStyles() {
@@ -220,6 +307,9 @@ class TheaterModeHandler {
             sidebar.style.removeProperty('padding');
             sidebar.style.removeProperty('box-sizing');
         }
+
+        // Restore hidden elements
+        this.showTheaterModeElements();
 
         this.detectedElements.clear();
     }
@@ -397,6 +487,16 @@ class SettingsManager {
         switch (key) {
             case 'theaterMode':
                 theaterModeHandler.toggle(newValue);
+                break;
+            case 'hideComments':
+            case 'hideLastVideos':
+            case 'hideEpisodeSummary':
+                // If theater mode is active, reapply the styles to reflect changes
+                if (theaterModeHandler.isActive) {
+                    // First restore elements, then apply new settings
+                    theaterModeHandler.showTheaterModeElements();
+                    theaterModeHandler.hideTheaterModeElements();
+                }
                 break;
             case 'playbackSpeedControl':
                 playbackSpeedHandler.toggle(newValue);
