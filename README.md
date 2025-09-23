@@ -1,6 +1,23 @@
 # ADN Improver
 
-Coming soon to Chrome Web Store, Edge Add-ons and Firefox Add-ons.
+Enhances the ADN Streaming experience with new features.
+
+- Bigger video player
+- Control video playback speed in the existing player settings
+- Blur or hide runner thumbnail
+- Hide scrollbar for a better immersion
+- Hide player dim screen
+- Hide subtitles
+- Add Picture-in-Picture button (no subtitles)
+- Maximize on double-click option
+- Toggeables features
+- Backup settings
+
+## Browser support
+
+- Chrome [Coming soon]
+- Edge [Coming soon]
+- Firefox [Coming soon]
 
 ## Manual/Development installation instructions
 
