@@ -59,10 +59,7 @@ export const SELECTORS = {
 export const CSS_CLASSES = {
     THEATER_MODE: 'adn-improver-theater-mode',
     HEADER_VISIBLE: 'adn-improver-header-visible',
-    HIDE_THUMBNAILS: 'adn-improver-hide-thumbnails',
     HIDE_SCROLLBAR: 'adn-improver-hide-scrollbar',
-    HIDE_PLAYER_DIM: 'adn-improver-hide-player-dim',
-    HIDE_SUBTITLES: 'adn-improver-hide-subtitles',
     FULLSCREEN: 'adn-improver-fullscreen',
     SPEED_CONTROL: 'adn-improver-speed-control',
     PIP_BUTTON: 'adn-improver-pip-button',

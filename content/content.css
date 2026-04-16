@@ -1,39 +1,59 @@
 /* CSS Custom Properties */
 :root {
-    --adn-control-bg: transparent;
-    --adn-control-color: white;
-    --adn-control-spacing: 10px;
-    --adn-option-bg: #333;
+    --adn-control-bg: rgba(0, 0, 0, 0.7);
+    --adn-control-bg-hover: rgba(255, 255, 255, 0.2);
+    --adn-control-color: #ffffff;
+    --adn-control-spacing: 8px;
+    --adn-option-bg: #1a1a1a;
+    --adn-option-bg-hover: #2a2a2a;
     --adn-blur-amount: 10px;
-    --adn-font-size-button: 18px;
-    --adn-transition-duration: 0.3s;
+    --adn-font-size-button: 14px;
+    --adn-font-weight: 600;
+    --adn-transition-duration: 0.2s;
+    --adn-border-radius: 6px;
+    --adn-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Playback Speed Control */
+/* Playback Speed Control - Crunchyroll Style */
 .adn-improver-speed-control {
     background: var(--adn-control-bg);
     color: var(--adn-control-color);
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--adn-border-radius);
+    padding: 6px 12px;
     margin-right: var(--adn-control-spacing);
-    transition: opacity var(--adn-transition-duration) ease;
+    font-size: var(--adn-font-size-button);
+    font-weight: var(--adn-font-weight);
+    cursor: pointer;
+    transition: all var(--adn-transition-duration) ease;
+    box-shadow: var(--adn-shadow);
+    outline: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .adn-improver-speed-control:hover {
-    opacity: 0.8;
+    background: var(--adn-control-bg-hover);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.adn-improver-speed-control:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 .adn-improver-speed-control option {
     background: var(--adn-option-bg);
     color: var(--adn-control-color);
+    padding: 8px 12px;
+    font-weight: var(--adn-font-weight);
+}
+
+.adn-improver-speed-control option:hover {
+    background: var(--adn-option-bg-hover);
 }
 
 /* ===== UI TWEAKS ===== */
-
-/* Hide Thumbnails */
-body.adn-improver-hide-thumbnails [data-testid^="season-list-item-"] img {
-    filter: blur(var(--adn-blur-amount));
-    transition: filter var(--adn-transition-duration) ease;
-}
 
 /* Hide Scrollbar */
 html.adn-improver-hide-scrollbar::-webkit-scrollbar, 
@@ -45,16 +65,6 @@ html.adn-improver-hide-scrollbar,
 body.adn-improver-hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
-}
-
-/* Hide Player Dim Screen */
-body.adn-improver-hide-player-dim .vjs-modal-dialog {
-    display: none !important;
-}
-
-/* Hide Subtitles */
-body.adn-improver-hide-subtitles .vjs-text-track-display {
-    display: none !important;
 }
 
 /* ===== INTERACTIVE ELEMENTS ===== */
@@ -73,22 +83,78 @@ li[itemtype="homePage"] .sc-2ae2f61a-4:hover {
 
 /* ===== CONTROL BUTTONS ===== */
 
-/* Picture-in-Picture Button */
+/* Picture-in-Picture Button - Crunchyroll Style */
 .adn-improver-pip-button {
     background: var(--adn-control-bg);
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--adn-border-radius);
     color: var(--adn-control-color);
     font-size: var(--adn-font-size-button);
+    font-weight: var(--adn-font-weight);
     margin-right: var(--adn-control-spacing);
     cursor: pointer;
-    transition: opacity var(--adn-transition-duration) ease;
-    padding: 4px 8px;
-    border-radius: 4px;
+    transition: all var(--adn-transition-duration) ease;
+    padding: 6px 14px;
+    box-shadow: var(--adn-shadow);
+    outline: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .adn-improver-pip-button:hover {
-    opacity: 0.8;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--adn-control-bg-hover);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.adn-improver-pip-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.adn-improver-pip-button:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+/* ===== FULLSCREEN MODE ===== */
+
+/* Enhanced fullscreen mode - Crunchyroll style */
+.video-js:fullscreen,
+.video-js.vjs-fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #000 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 999999 !important;
+}
+
+.video-js:fullscreen video,
+.video-js.vjs-fullscreen video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Fullscreen controls positioning */
+.video-js:fullscreen .vjs-control-bar,
+.video-js.vjs-fullscreen .vjs-control-bar {
+    position: absolute !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%) !important;
+    padding-top: 60px !important;
+}
+
+/* Fullscreen subtitles positioning */
+.video-js:fullscreen .vjs-text-track-display,
+.video-js.vjs-fullscreen .vjs-text-track-display {
+    position: absolute !important;
+    bottom: 80px !important;
+    width: 100% !important;
 }
 
 

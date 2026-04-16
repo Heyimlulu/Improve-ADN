@@ -16,7 +16,6 @@ export class SettingsManager {
         this.handlers.theaterMode?.toggle(settings.theaterMode);
         this.handlers.playbackSpeed?.toggle(settings.playbackSpeedControl);
         this.handlers.pipButton?.toggle(settings.pipButton);
-        this.handlers.fullscreen?.toggleDoubleClick(settings.maximizeOnDoubleClick);
         this.handlers.uiTweaks?.apply(settings);
     }
 

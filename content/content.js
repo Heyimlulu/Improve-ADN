@@ -26,16 +26,9 @@ async function initializeConstants() {
 function initializeFallbackConstants() {
     DEFAULT_SETTINGS = {
         theaterMode: false,
-        hideComments: true,
-        hideLastVideos: true,
-        hideEpisodeSummary: true,
         playbackSpeedControl: true,
-        hideThumbnails: false,
         hideScrollbar: false,
-        hidePlayerDim: false,
-        hideSubtitles: false,
-        pipButton: true,
-        maximizeOnDoubleClick: true
+        pipButton: true
     };
     
     SELECTORS = {
@@ -54,10 +47,7 @@ function initializeFallbackConstants() {
     CSS_CLASSES = {
         THEATER_MODE: 'adn-improver-theater-mode',
         HEADER_VISIBLE: 'adn-improver-header-visible',
-        HIDE_THUMBNAILS: 'adn-improver-hide-thumbnails',
         HIDE_SCROLLBAR: 'adn-improver-hide-scrollbar',
-        HIDE_PLAYER_DIM: 'adn-improver-hide-player-dim',
-        HIDE_SUBTITLES: 'adn-improver-hide-subtitles',
         FULLSCREEN: 'adn-improver-fullscreen',
         SPEED_CONTROL: 'adn-improver-speed-control',
         PIP_BUTTON: 'adn-improver-pip-button',
@@ -175,217 +165,55 @@ class TheaterModeHandler {
         this.isActive = false;
     }
 
+    /**
+     * Check if current URL is a video playback page
+     * Theater mode should only work on video playback pages like:
+     * https://animationdigitalnetwork.com/video/[show-name]/[episode-id]
+     * 
+     * NOT on:
+     * - Genre pages: /video/genre/*
+     * - News pages: news.animationdigitalnetwork.com
+     * - Popular pages: /video/order/popular
+     */
+    isVideoPlaybackPage() {
+        const url = window.location.href;
+        const pathname = window.location.pathname;
+        
+        // Exclude news subdomain
+        if (url.includes('news.animationdigitalnetwork.com')) {
+            return false;
+        }
+        
+        // Exclude genre pages
+        if (pathname.includes('/video/genre/')) {
+            return false;
+        }
+        
+        // Exclude order/popular pages
+        if (pathname.includes('/video/order/')) {
+            return false;
+        }
+        
+        // Check if it's a video playback page pattern: /video/[show]/[episode-id]
+        const videoPagePattern = /\/video\/[^\/]+\/\d+/;
+        return videoPagePattern.test(pathname);
+    }
+
     toggle(enabled) {
+        // Only allow theater mode on video playback pages
+        if (enabled && !this.isVideoPlaybackPage()) {
+            console.log('Theater mode is only available on video playback pages');
+            return;
+        }
+        
         this.isActive = enabled;
         document.body.classList.toggle(CSS_CLASSES.THEATER_MODE, enabled);
         if (enabled) {
-            this.detectAndCacheElements();
             appState.addEventListenerTracked(document, 'mousemove', this.handleMouseMove);
-            this.applyTheaterModeStyles();
         } else {
             document.removeEventListener('mousemove', this.handleMouseMove);
             document.querySelector(SELECTORS.HEADER)?.classList.remove(CSS_CLASSES.HEADER_VISIBLE);
-            this.removeTheaterModeStyles();
         }
-    }
-
-    detectAndCacheElements() {
-        // Detect main content area with fallback selectors
-        const mainContent = Utils.findElementWithFallback(
-            SELECTORS.THEATER_MAIN_CONTENT, 
-            'main content'
-        );
-        if (mainContent) {
-            this.detectedElements.set('mainContent', mainContent);
-        }
-
-        // Detect layout container with fallback selectors
-        const layoutContainer = Utils.findElementWithFallback(
-            SELECTORS.THEATER_LAYOUT_CONTAINER, 
-            'layout container'
-        );
-        if (layoutContainer) {
-            this.detectedElements.set('layoutContainer', layoutContainer);
-        }
-
-        // Detect sidebar with fallback selectors
-        const sidebar = Utils.findElementWithFallback(
-            SELECTORS.THEATER_SIDEBAR, 
-            'sidebar'
-        );
-        if (sidebar) {
-            this.detectedElements.set('sidebar', sidebar);
-        }
-    }
-
-    applyTheaterModeStyles() {
-        // Optimized theater mode with container-matching width
-        const videoPlayer = document.querySelector('.video-js');
-        if (videoPlayer) {
-            videoPlayer.style.setProperty('width', '100%', 'important');
-            videoPlayer.style.setProperty('max-width', 'none', 'important');
-            videoPlayer.style.setProperty('height', 'auto', 'important');
-            videoPlayer.style.setProperty('margin', '1rem auto', 'important');
-            videoPlayer.style.setProperty('box-shadow', '0 4px 20px rgba(0, 0, 0, 0.3)', 'important');
-            videoPlayer.style.setProperty('aspect-ratio', '16/9', 'important');
-            videoPlayer.style.setProperty('object-fit', 'contain', 'important');
-            
-            // Also apply to the video element inside
-            const videoElement = videoPlayer.querySelector('video');
-            if (videoElement) {
-                videoElement.style.setProperty('width', '100%', 'important');
-                videoElement.style.setProperty('height', '100%', 'important');
-                videoElement.style.setProperty('object-fit', 'contain', 'important');
-            }
-        }
-
-        // Apply comfortable layout changes to detected elements
-        const mainContent = this.detectedElements.get('mainContent');
-        if (mainContent) {
-            mainContent.style.setProperty('width', '100%', 'important');
-            mainContent.style.setProperty('max-width', '100%', 'important');
-            mainContent.style.setProperty('margin', '0', 'important');
-            mainContent.style.setProperty('padding', '0 2rem', 'important');
-            mainContent.style.setProperty('box-sizing', 'border-box', 'important');
-        }
-
-        const sidebar = this.detectedElements.get('sidebar');
-        if (sidebar) {
-            sidebar.style.setProperty('width', '100%', 'important');
-            sidebar.style.setProperty('max-width', 'none', 'important');
-            sidebar.style.setProperty('margin', '2rem auto 0 auto', 'important');
-            sidebar.style.setProperty('padding', '0 2rem', 'important');
-            sidebar.style.setProperty('box-sizing', 'border-box', 'important');
-        }
-
-        // Hide additional content sections in theater mode
-        this.hideTheaterModeElements();
-    }
-
-    hideTheaterModeElements() {
-        // Hide comments panel if setting is enabled
-        if (appState.settings.hideComments) {
-            const commentsPanel = document.querySelector(SELECTORS.COMMENTS_PANEL);
-            if (commentsPanel) {
-                commentsPanel.style.setProperty('display', 'none', 'important');
-            }
-        }
-
-        // Hide last videos section if setting is enabled
-        if (appState.settings.hideLastVideos) {
-            const lastVideos = document.querySelector(SELECTORS.LAST_VIDEOS);
-            if (lastVideos) {
-                lastVideos.style.setProperty('display', 'none', 'important');
-            }
-        }
-
-        // Hide episode summary if setting is enabled
-        if (appState.settings.hideEpisodeSummary) {
-            this.hideEpisodeSummary();
-        }
-    }
-
-    hideEpisodeSummary() {
-        // Find h2 > span with episode summary title and hide the outer container
-        const titleElements = document.querySelectorAll(SELECTORS.EPISODE_SUMMARY_TITLE);
-        titleElements.forEach(span => {
-            if (span.textContent && span.textContent.trim() === TEXT_CONTENT.EPISODE_SUMMARY_TITLE) {
-                // Find the outermost container using hierarchical selectors
-                const containerToHide = this.findEpisodeSummaryContainer(span);
-                
-                if (containerToHide && Utils.isElementSafeToHide(containerToHide)) {
-                    containerToHide.style.setProperty('display', 'none', 'important');
-                }
-            }
-        });
-    }
-
-    findEpisodeSummaryContainer(span) {
-        // Find container using hierarchical priority
-        for (const selector of EPISODE_SUMMARY_CONTAINERS) {
-            const container = span.closest(selector);
-            if (container) return container;
-        }
-        return null;
-    }
-
-    showTheaterModeElements() {
-        // Show comments panel
-        const commentsPanel = document.querySelector(SELECTORS.COMMENTS_PANEL);
-        if (commentsPanel) {
-            commentsPanel.style.removeProperty('display');
-        }
-
-        // Show last videos section
-        const lastVideos = document.querySelector(SELECTORS.LAST_VIDEOS);
-        if (lastVideos) {
-            lastVideos.style.removeProperty('display');
-        }
-
-        // Show episode summary
-        this.showEpisodeSummary();
-    }
-
-    showEpisodeSummary() {
-        // Find h2 > span with episode summary title and show the outer container
-        const titleElements = document.querySelectorAll(SELECTORS.EPISODE_SUMMARY_TITLE);
-        titleElements.forEach(span => {
-            if (span.textContent && span.textContent.trim() === TEXT_CONTENT.EPISODE_SUMMARY_TITLE) {
-                // Find the outermost container using hierarchical selectors
-                const containerToShow = this.findEpisodeSummaryContainer(span);
-                
-                if (containerToShow && Utils.isElementSafeToHide(containerToShow)) {
-                    containerToShow.style.removeProperty('display');
-                }
-            }
-        });
-    }
-
-    removeTheaterModeStyles() {
-        // Restore video player styles
-        const videoPlayer = document.querySelector('.video-js');
-        if (videoPlayer) {
-            videoPlayer.style.removeProperty('width');
-            videoPlayer.style.removeProperty('max-width');
-            videoPlayer.style.removeProperty('height');
-            videoPlayer.style.removeProperty('margin');
-            videoPlayer.style.removeProperty('box-shadow');
-            videoPlayer.style.removeProperty('aspect-ratio');
-            videoPlayer.style.removeProperty('object-fit');
-            
-            // Also restore the video element inside
-            const videoElement = videoPlayer.querySelector('video');
-            if (videoElement) {
-                videoElement.style.removeProperty('width');
-                videoElement.style.removeProperty('height');
-                videoElement.style.removeProperty('object-fit');
-            }
-        }
-
-        // Restore main content
-        const mainContent = this.detectedElements.get('mainContent');
-        if (mainContent) {
-            mainContent.style.removeProperty('width');
-            mainContent.style.removeProperty('max-width');
-            mainContent.style.removeProperty('margin');
-            mainContent.style.removeProperty('padding');
-            mainContent.style.removeProperty('box-sizing');
-        }
-
-        // Restore sidebar
-        const sidebar = this.detectedElements.get('sidebar');
-        if (sidebar) {
-            sidebar.style.removeProperty('width');
-            sidebar.style.removeProperty('max-width');
-            sidebar.style.removeProperty('margin');
-            sidebar.style.removeProperty('padding');
-            sidebar.style.removeProperty('box-sizing');
-        }
-
-        // Restore hidden elements
-        this.showTheaterModeElements();
-
-        this.detectedElements.clear();
     }
 
     handleMouseMove(e) {
@@ -485,51 +313,12 @@ class PipButtonHandler {
 
 const pipButtonHandler = new PipButtonHandler();
 
-/**
- * Fullscreen Handler with Enhanced Mode
- */
-class FullscreenHandler {
-    constructor() {
-        this.dblClickHandler = this.dblClickHandler.bind(this);
-    }
-
-    toggleDoubleClick(enabled) {
-        if (enabled && appState.video) {
-            appState.addEventListenerTracked(appState.video, 'dblclick', this.dblClickHandler);
-        } else if (appState.video) {
-            appState.video.removeEventListener('dblclick', this.dblClickHandler);
-        }
-    }
-
-    async dblClickHandler() {
-        try {
-            const playerContainer = appState.video?.closest(SELECTORS.PLAYER_CONTAINER);
-            const elementToFullscreen = playerContainer || appState.video;
-            
-            if (!document.fullscreenElement && elementToFullscreen) {
-                await elementToFullscreen.requestFullscreen();
-            } else if (document.fullscreenElement) {
-                await document.exitFullscreen();
-            }
-        } catch (error) {
-            console.warn('Fullscreen operation failed:', error);
-        }
-    }
-
-}
-
-const fullscreenHandler = new FullscreenHandler();
 
 /**
  * UI Tweaks Handler
  */
 class UITweaksHandler {
     apply(settings) {
-        // Apply UI toggle classes
-        document.body.classList.toggle(CSS_CLASSES.HIDE_THUMBNAILS, settings.hideThumbnails);
-        document.body.classList.toggle(CSS_CLASSES.HIDE_PLAYER_DIM, settings.hidePlayerDim);
-        document.body.classList.toggle(CSS_CLASSES.HIDE_SUBTITLES, settings.hideSubtitles);
-        
         // Apply scrollbar hiding to both html and body elements
         const hideScrollbar = settings.hideScrollbar;
         document.documentElement.classList.toggle(CSS_CLASSES.HIDE_SCROLLBAR, hideScrollbar);
@@ -551,7 +340,6 @@ class SettingsManager {
         theaterModeHandler.toggle(settings.theaterMode);
         playbackSpeedHandler.toggle(settings.playbackSpeedControl);
         pipButtonHandler.toggle(settings.pipButton);
-        fullscreenHandler.toggleDoubleClick(settings.maximizeOnDoubleClick);
         uiTweaksHandler.apply(settings);
     }
 
@@ -562,29 +350,13 @@ class SettingsManager {
             case 'theaterMode':
                 theaterModeHandler.toggle(newValue);
                 break;
-            case 'hideComments':
-            case 'hideLastVideos':
-            case 'hideEpisodeSummary':
-                // If theater mode is active, reapply the styles to reflect changes
-                if (theaterModeHandler.isActive) {
-                    // First restore elements, then apply new settings
-                    theaterModeHandler.showTheaterModeElements();
-                    theaterModeHandler.hideTheaterModeElements();
-                }
-                break;
             case 'playbackSpeedControl':
                 playbackSpeedHandler.toggle(newValue);
                 break;
             case 'pipButton':
                 pipButtonHandler.toggle(newValue);
                 break;
-            case 'maximizeOnDoubleClick':
-                fullscreenHandler.toggleDoubleClick(newValue);
-                break;
-            case 'hideThumbnails':
             case 'hideScrollbar':
-            case 'hidePlayerDim':
-            case 'hideSubtitles':
                 uiTweaksHandler.apply(appState.settings);
                 break;
         }
@@ -597,19 +369,37 @@ const settingsManager = new SettingsManager();
  * Application Initializer
  */
 class ADNImproverApp {
+    /**
+     * Check if current page is a video playback page
+     */
+    isVideoPlaybackPage() {
+        const pathname = window.location.pathname;
+        const videoPagePattern = /\/video\/[^\/]+\/\d+/;
+        return videoPagePattern.test(pathname);
+    }
+
     async init() {
         try {
             // Initialize constants first
             await initializeConstants();
             
-            // Find video element and controls
-            await this.findVideoElement();
+            // Only search for video element on video playback pages
+            if (this.isVideoPlaybackPage()) {
+                await this.findVideoElement();
+            } else {
+                console.log('ADN Improver: Not a video playback page, skipping video element search');
+                // Ensure theater mode is disabled on non-video pages
+                this.disableTheaterModeOnNonVideoPages();
+            }
             
-            // Load and apply settings
+            // Load and apply settings (works on all pages)
             await this.loadSettings();
             
             // Setup storage change listener
             this.setupStorageListener();
+            
+            // Setup navigation listener to handle page changes
+            this.setupNavigationListener();
             
             console.log('ADN Improver initialized successfully');
         } catch (error) {
@@ -628,11 +418,13 @@ class ADNImproverApp {
                     appState.video = video;
                     appState.playerControls = video.closest(SELECTORS.PLAYER_CONTAINER)
                         ?.querySelector(SELECTORS.CONTROL_BAR);
+                    console.log('ADN Improver: Video element found');
                     resolve(video);
                 } else if (attempts < maxAttempts) {
                     attempts++;
                     setTimeout(find, TIMING.VIDEO_SEARCH_INTERVAL);
                 } else {
+                    console.warn('ADN Improver: Video element not found after maximum attempts');
                     reject(new Error('Video element not found after maximum attempts'));
                 }
             };
@@ -659,6 +451,57 @@ class ADNImproverApp {
                 }
             }
         });
+    }
+
+    setupNavigationListener() {
+        // Listen for URL changes (SPA navigation)
+        let lastUrl = window.location.href;
+        
+        const observer = new MutationObserver(() => {
+            const currentUrl = window.location.href;
+            if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl;
+                this.handleNavigation();
+            }
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        appState.observers.push(observer);
+    }
+
+    handleNavigation() {
+        console.log('ADN Improver: Page navigation detected');
+        
+        // If we're on a video playback page, enable theater mode if setting is enabled
+        if (this.isVideoPlaybackPage()) {
+            // Re-apply theater mode setting on video pages
+            if (appState.settings.theaterMode) {
+                console.log('ADN Improver: Enabling theater mode on video page');
+                theaterModeHandler.toggle(true);
+            }
+        } else {
+            // If we're not on a video playback page, disable theater mode
+            this.disableTheaterModeOnNonVideoPages();
+        }
+    }
+
+    disableTheaterModeOnNonVideoPages() {
+        // Force disable theater mode CSS class
+        if (document.body.classList.contains(CSS_CLASSES.THEATER_MODE)) {
+            console.log('ADN Improver: Disabling theater mode on non-video page');
+            document.body.classList.remove(CSS_CLASSES.THEATER_MODE);
+            theaterModeHandler.isActive = false;
+            
+            // Remove header visible class
+            const header = document.querySelector(SELECTORS.HEADER);
+            if (header) {
+                header.classList.remove(CSS_CLASSES.HEADER_VISIBLE);
+            }
+        }
     }
 
     cleanup() {

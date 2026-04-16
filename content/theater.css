@@ -1,82 +1,79 @@
 /* --- Wide Player (Theater) Mode --- */
 
-/* Optimized theater mode for comfortable viewing */
+/* Optimized theater mode for comfortable viewing - Crunchyroll-style */
 body.adn-improver-theater-mode {
+    overflow: hidden !important; /* Prevent scrolling in theater mode */
+    height: 100vh !important; /* Full viewport height */
+    
     /* Video player with proper aspect ratio matching container */
     .video-js {
-        width: 100% !important;
-        max-width: none !important; /* Remove max-width constraint */
-        height: auto !important;
-        margin: 0 auto !important; /* Center the video */
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important; /* Add subtle shadow */
-        aspect-ratio: 16/9 !important; /* Maintain 16:9 aspect ratio */
-        object-fit: contain !important; /* Prevent stretching */
+        width: 100vw !important; /* Full viewport width */
+        max-width: none !important;
+        height: 100vh !important; /* Full viewport height */
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        aspect-ratio: unset !important; /* Let video fill the space */
+        object-fit: contain !important;
+        position: fixed !important; /* Fixed positioning for no scroll */
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 9999 !important;
+        background: #000 !important; /* Black background like Crunchyroll */
+        display: block !important; /* Ensure visibility */
+        visibility: visible !important; /* Force visibility */
     }
     
-    /* Ensure the video element inside maintains aspect ratio */
+    /* Ensure the video element inside fills the container */
     .video-js video {
         width: 100% !important;
         height: 100% !important;
-        object-fit: contain !important; /* Prevent stretching of video content */
+        object-fit: contain !important;
+        display: block !important;
+        visibility: visible !important;
     }
     
-    /* Make main content area full width but with some breathing room */
-    div[data-testid="main-content"],
-    main,
-    .main-content {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 2rem !important; /* Add some horizontal padding for comfort */
-        box-sizing: border-box !important;
-    }
-    
-    /* Add some top margin to create space from header */
-    .video-js {
-        margin-top: 1rem !important;
+    /* Hide all children of main content EXCEPT the video player */
+    div[data-testid="main-content"] > *:not(.video-js):not([class*="video"]),
+    main > *:not(.video-js):not([class*="video"]),
+    .main-content > *:not(.video-js):not([class*="video"]) {
+        display: none !important;
     }
     
     /* Theater mode element hiding is now controlled by JavaScript settings */
 }
 
-/* Move sidebar below the main content with better spacing */
+/* Hide sidebar in theater mode */
 body.adn-improver-theater-mode aside {
+    display: none !important;
+}
+
+/* Ensure all video player components are visible */
+body.adn-improver-theater-mode .video-js * {
+    visibility: visible !important;
+}
+
+/* Video controls positioning in theater mode */
+body.adn-improver-theater-mode .vjs-control-bar {
+    position: absolute !important;
+    bottom: 0 !important;
     width: 100% !important;
-    max-width: none !important; /* Match video width - no constraint */
-    margin: 2rem auto 0 auto !important; /* Center and add top margin */
-    padding: 0 2rem !important; /* Match main content padding */
-    box-sizing: border-box !important;
+    z-index: 10000 !important;
+    display: flex !important;
 }
 
-/* Responsive adjustments for different screen sizes */
-@media (max-width: 1200px) {
-    body.adn-improver-theater-mode div[data-testid="main-content"],
-    body.adn-improver-theater-mode main,
-    body.adn-improver-theater-mode .main-content {
-        padding: 0 1rem !important;
-    }
-    
-    body.adn-improver-theater-mode aside {
-        padding: 0 1rem !important;
-    }
+/* Ensure subtitles are visible above controls */
+body.adn-improver-theater-mode .vjs-text-track-display {
+    position: absolute !important;
+    bottom: 60px !important;
+    z-index: 9999 !important;
 }
 
-@media (max-width: 768px) {
-    body.adn-improver-theater-mode .video-js {
-        margin: 0.5rem auto !important;
-        box-shadow: none !important; /* Remove shadow on mobile */
-    }
-    
-    body.adn-improver-theater-mode div[data-testid="main-content"],
-    body.adn-improver-theater-mode main,
-    body.adn-improver-theater-mode .main-content {
-        padding: 0 0.5rem !important;
-    }
-    
-    body.adn-improver-theater-mode aside {
-        padding: 0 0.5rem !important;
-        margin-top: 1rem auto 0 auto !important;
-    }
+/* Ensure video player poster/loading screen is visible */
+body.adn-improver-theater-mode .vjs-poster,
+body.adn-improver-theater-mode .vjs-loading-spinner {
+    display: block !important;
+    visibility: visible !important;
 }
 
 /* Hide the footer to maximize space */
@@ -84,19 +81,24 @@ body.adn-improver-theater-mode footer {
     display: none !important;
 }
 
-/* Style the header for theater mode (hover-to-show) */
+/* Style the header for theater mode (hover-to-show like Crunchyroll) */
 body.adn-improver-theater-mode header {
     position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
     z-index: 100000 !important;
-    transform: translateY(-100%);
+    transform: translateY(-100%) !important;
     transition: transform 0.3s ease-in-out !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* Show header when the visible class is applied */
 body.adn-improver-theater-mode header.adn-improver-header-visible {
-    transform: translateY(0);
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
 }
 
