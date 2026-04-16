@@ -5,16 +5,9 @@
 // Default settings configuration
 export const DEFAULT_SETTINGS = {
     theaterMode: false,
-    hideComments: true,
-    hideLastVideos: true,
-    hideEpisodeSummary: true,
     playbackSpeedControl: true,
-    hideThumbnails: false,
     hideScrollbar: false,
-    hidePlayerDim: false,
-    hideSubtitles: false,
-    pipButton: true,
-    maximizeOnDoubleClick: true
+    pipButton: true
 };
 
 // Setting keys for easy iteration
