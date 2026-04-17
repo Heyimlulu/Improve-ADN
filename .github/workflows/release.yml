@@ -19,12 +19,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
 
       - name: Install dependencies
         run: npm install
@@ -34,6 +34,13 @@ jobs:
 
       - name: Build extension
         run: npm run build
+
+      - name: Get build artifact filename
+        id: get_artifact
+        run: |
+          ZIP_FILE=$(ls dist/adn-improver-v*.zip | head -n 1)
+          echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "zip_name=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
 
       - name: Commit, Tag, and Push Changes
         id: versioning
@@ -50,23 +57,13 @@ jobs:
           git push --tags
 
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.versioning.outputs.new_version }}
-          release_name: v${{ steps.versioning.outputs.new_version }}
+          name: v${{ steps.versioning.outputs.new_version }}
           body: "Official release for version v${{ steps.versioning.outputs.new_version }}"
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+          files: ${{ steps.get_artifact.outputs.zip_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/adn-improver-v${{ steps.versioning.outputs.new_version }}.zip
-          asset_name: adn-improver-v${{ steps.versioning.outputs.new_version }}.zip
-          asset_content_type: application/zip
