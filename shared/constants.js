@@ -4,10 +4,7 @@
 
 // Default settings configuration
 export const DEFAULT_SETTINGS = {
-    theaterMode: false,
-    playbackSpeedControl: true,
-    hideScrollbar: false,
-    pipButton: true
+    // Theater mode is always active on video pages by default
 };
 
 // Setting keys for easy iteration
@@ -61,13 +58,8 @@ export const CSS_CLASSES = {
     HEADER_VISIBLE: 'adn-improver-header-visible',
     HIDE_SCROLLBAR: 'adn-improver-hide-scrollbar',
     FULLSCREEN: 'adn-improver-fullscreen',
-    SPEED_CONTROL: 'adn-improver-speed-control',
-    PIP_BUTTON: 'adn-improver-pip-button',
     WATCHED: 'is-watched'
 };
-
-// Playback speeds
-export const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
 // Timing constants
 export const TIMING = {

@@ -1,5 +1,5 @@
 // Import shared constants from the constants file
-let DEFAULT_SETTINGS, SELECTORS, CSS_CLASSES, PLAYBACK_SPEEDS, TIMING, 
+let DEFAULT_SETTINGS, SELECTORS, CSS_CLASSES, TIMING, 
     EPISODE_SUMMARY_CONTAINERS, TEXT_CONTENT, VIDEO_SAFETY_SELECTORS;
 
 // Initialize constants from shared file
@@ -9,15 +9,11 @@ async function initializeConstants() {
         DEFAULT_SETTINGS = constants.DEFAULT_SETTINGS;
         SELECTORS = constants.SELECTORS;
         CSS_CLASSES = constants.CSS_CLASSES;
-        PLAYBACK_SPEEDS = constants.PLAYBACK_SPEEDS;
         TIMING = constants.TIMING;
         EPISODE_SUMMARY_CONTAINERS = constants.EPISODE_SUMMARY_CONTAINERS;
         TEXT_CONTENT = constants.TEXT_CONTENT;
         VIDEO_SAFETY_SELECTORS = constants.VIDEO_SAFETY_SELECTORS;
-        
-        console.log('ADN Improver: Constants loaded successfully');
     } catch (error) {
-        console.error('ADN Improver: Failed to load constants, using fallback', error);
         // Fallback constants in case import fails
         initializeFallbackConstants();
     }
@@ -25,10 +21,7 @@ async function initializeConstants() {
 
 function initializeFallbackConstants() {
     DEFAULT_SETTINGS = {
-        theaterMode: false,
-        playbackSpeedControl: true,
-        hideScrollbar: false,
-        pipButton: true
+        // Theater mode is always active on video pages by default
     };
     
     SELECTORS = {
@@ -73,11 +66,9 @@ const Utils = {
         for (const selector of selectors) {
             const element = document.querySelector(selector);
             if (element) {
-                console.log(`Found ${elementType} using selector: ${selector}`);
                 return element;
             }
         }
-        console.warn(`No ${elementType} found with any selector`);
         return null;
     },
 
@@ -202,7 +193,6 @@ class TheaterModeHandler {
     toggle(enabled) {
         // Only allow theater mode on video playback pages
         if (enabled && !this.isVideoPlaybackPage()) {
-            console.log('Theater mode is only available on video playback pages');
             return;
         }
         
@@ -231,135 +221,19 @@ class TheaterModeHandler {
 const theaterModeHandler = new TheaterModeHandler();
 
 /**
- * Playback Speed Control Handler
- */
-class PlaybackSpeedHandler {
-    toggle(enabled) {
-        let speedControl = appState.playerControls?.querySelector(`.${CSS_CLASSES.SPEED_CONTROL}`);
-        
-        if (enabled) {
-            if (speedControl) return; // Already exists
-            
-            speedControl = this.createSpeedControl();
-            appState.playerControls?.prepend(speedControl);
-        } else {
-            speedControl?.remove();
-        }
-    }
-
-    createSpeedControl() {
-        const speedControl = document.createElement('select');
-        speedControl.className = CSS_CLASSES.SPEED_CONTROL;
-        
-        PLAYBACK_SPEEDS.forEach(speed => {
-            const option = document.createElement('option');
-            option.value = speed;
-            option.innerText = `${speed}x`;
-            if (speed === 1) option.selected = true;
-            speedControl.appendChild(option);
-        });
-        
-        const changeHandler = (e) => {
-            if (appState.video) {
-                appState.video.playbackRate = parseFloat(e.target.value);
-            }
-        };
-        
-        appState.addEventListenerTracked(speedControl, 'change', changeHandler);
-        return speedControl;
-    }
-}
-
-const playbackSpeedHandler = new PlaybackSpeedHandler();
-
-/**
- * Picture-in-Picture Button Handler
- */
-class PipButtonHandler {
-    toggle(enabled) {
-        let pipButton = appState.playerControls?.querySelector(`.${CSS_CLASSES.PIP_BUTTON}`);
-        
-        if (enabled) {
-            if (pipButton) return;
-            
-            pipButton = this.createPipButton();
-            appState.playerControls?.appendChild(pipButton);
-        } else {
-            pipButton?.remove();
-        }
-    }
-
-    createPipButton() {
-        const pipButton = document.createElement('button');
-        pipButton.innerText = 'PiP';
-        pipButton.className = CSS_CLASSES.PIP_BUTTON;
-        
-        const clickHandler = async () => {
-            try {
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                } else if (appState.video) {
-                    await appState.video.requestPictureInPicture();
-                }
-            } catch (error) {
-                console.warn('Picture-in-Picture failed:', error);
-            }
-        };
-        
-        appState.addEventListenerTracked(pipButton, 'click', clickHandler);
-        return pipButton;
-    }
-}
-
-const pipButtonHandler = new PipButtonHandler();
-
-
-/**
- * UI Tweaks Handler
- */
-class UITweaksHandler {
-    apply(settings) {
-        // Apply scrollbar hiding to both html and body elements
-        const hideScrollbar = settings.hideScrollbar;
-        document.documentElement.classList.toggle(CSS_CLASSES.HIDE_SCROLLBAR, hideScrollbar);
-        document.body.classList.toggle(CSS_CLASSES.HIDE_SCROLLBAR, hideScrollbar);
-    }
-}
-
-const uiTweaksHandler = new UITweaksHandler();
-
-
-/**
  * Settings Manager
  */
 class SettingsManager {
     applyAllSettings(settings) {
         appState.settings = { ...settings };
         
-        // Apply all feature settings
-        theaterModeHandler.toggle(settings.theaterMode);
-        playbackSpeedHandler.toggle(settings.playbackSpeedControl);
-        pipButtonHandler.toggle(settings.pipButton);
-        uiTweaksHandler.apply(settings);
+        // Theater mode is always active on video pages - no toggle needed
     }
 
     handleSettingChange(key, newValue) {
         appState.settings[key] = newValue;
         
-        switch (key) {
-            case 'theaterMode':
-                theaterModeHandler.toggle(newValue);
-                break;
-            case 'playbackSpeedControl':
-                playbackSpeedHandler.toggle(newValue);
-                break;
-            case 'pipButton':
-                pipButtonHandler.toggle(newValue);
-                break;
-            case 'hideScrollbar':
-                uiTweaksHandler.apply(appState.settings);
-                break;
-        }
+        // No settings to handle currently
     }
 }
 
@@ -386,8 +260,9 @@ class ADNImproverApp {
             // Only search for video element on video playback pages
             if (this.isVideoPlaybackPage()) {
                 await this.findVideoElement();
+                // Enable theater mode automatically on video pages
+                theaterModeHandler.toggle(true);
             } else {
-                console.log('ADN Improver: Not a video playback page, skipping video element search');
                 // Ensure theater mode is disabled on non-video pages
                 this.disableTheaterModeOnNonVideoPages();
             }
@@ -400,10 +275,7 @@ class ADNImproverApp {
             
             // Setup navigation listener to handle page changes
             this.setupNavigationListener();
-            
-            console.log('ADN Improver initialized successfully');
         } catch (error) {
-            console.error('ADN Improver initialization failed:', error);
         }
     }
 
@@ -418,13 +290,11 @@ class ADNImproverApp {
                     appState.video = video;
                     appState.playerControls = video.closest(SELECTORS.PLAYER_CONTAINER)
                         ?.querySelector(SELECTORS.CONTROL_BAR);
-                    console.log('ADN Improver: Video element found');
                     resolve(video);
                 } else if (attempts < maxAttempts) {
                     attempts++;
                     setTimeout(find, TIMING.VIDEO_SEARCH_INTERVAL);
                 } else {
-                    console.warn('ADN Improver: Video element not found after maximum attempts');
                     reject(new Error('Video element not found after maximum attempts'));
                 }
             };
@@ -438,7 +308,6 @@ class ADNImproverApp {
             const syncData = await chrome.storage.sync.get(DEFAULT_SETTINGS);
             settingsManager.applyAllSettings(syncData);
         } catch (error) {
-            console.warn('Failed to load settings, using defaults:', error);
             settingsManager.applyAllSettings(DEFAULT_SETTINGS);
         }
     }
@@ -474,15 +343,9 @@ class ADNImproverApp {
     }
 
     handleNavigation() {
-        console.log('ADN Improver: Page navigation detected');
-        
-        // If we're on a video playback page, enable theater mode if setting is enabled
+        // Always enable theater mode on video playback pages
         if (this.isVideoPlaybackPage()) {
-            // Re-apply theater mode setting on video pages
-            if (appState.settings.theaterMode) {
-                console.log('ADN Improver: Enabling theater mode on video page');
-                theaterModeHandler.toggle(true);
-            }
+            theaterModeHandler.toggle(true);
         } else {
             // If we're not on a video playback page, disable theater mode
             this.disableTheaterModeOnNonVideoPages();
@@ -492,7 +355,6 @@ class ADNImproverApp {
     disableTheaterModeOnNonVideoPages() {
         // Force disable theater mode CSS class
         if (document.body.classList.contains(CSS_CLASSES.THEATER_MODE)) {
-            console.log('ADN Improver: Disabling theater mode on non-video page');
             document.body.classList.remove(CSS_CLASSES.THEATER_MODE);
             theaterModeHandler.isActive = false;
             

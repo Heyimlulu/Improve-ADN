@@ -11,9 +11,7 @@ async function initializeConstants() {
         const constants = await import(chrome.runtime.getURL('shared/constants.js'));
         DEFAULT_SETTINGS = constants.DEFAULT_SETTINGS;
         SETTING_KEYS = constants.SETTING_KEYS;
-        console.log('Popup: Constants loaded successfully');
-    } catch (error) {
-        console.error('Popup: Failed to load constants, using fallback', error);
+        } catch (error) {
         // Fallback constants
         DEFAULT_SETTINGS = {
             theaterMode: false,
@@ -64,9 +62,7 @@ class PopupSettingsManager {
             });
 
             await chrome.storage.sync.set(settings);
-            console.log('Settings saved successfully');
         } catch (error) {
-            console.error('Failed to save settings:', error);
         }
     }
 
@@ -89,10 +85,7 @@ class PopupSettingsManager {
                     }
                 }
             });
-            
-            console.log('Settings restored successfully');
-        } catch (error) {
-            console.error('Failed to restore settings:', error);
+            } catch (error) {
             // Fallback to default settings
             this.applyDefaultSettings();
         }
@@ -184,10 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Restore settings
         await settingsManager.restoreSettings();
-        
-        console.log('Popup initialized successfully');
     } catch (error) {
-        console.error('Popup initialization failed:', error);
     }
 });
 
@@ -239,10 +229,7 @@ class BackupManager {
             a.download = `adn-improver-backup-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            
-            console.log('Settings backup created successfully');
         } catch (error) {
-            console.error('Backup failed:', error);
             this.showNotification('Backup failed. Please try again.', 'error');
         }
     }
@@ -282,9 +269,7 @@ class BackupManager {
             await settingsManager.restoreSettings();
             
             this.showNotification('Settings restored successfully!', 'success');
-            console.log('Settings restored from backup');
         } catch (error) {
-            console.error('Restore failed:', error);
             this.showNotification('Error: Invalid backup file or restore failed.', 'error');
         } finally {
             // Clear the file input
@@ -309,9 +294,7 @@ class BackupManager {
             settingsManager.applyDefaultSettings();
             
             this.showNotification('All settings have been reset to defaults.', 'success');
-            console.log('Settings reset to defaults');
         } catch (error) {
-            console.error('Reset failed:', error);
             this.showNotification('Reset failed. Please try again.', 'error');
         }
     }

@@ -65,6 +65,15 @@ h1 {
     display: block;
 }
 
+.info-text {
+    text-align: center;
+    color: #cccccc;
+    font-size: 14px;
+    padding: 20px;
+    margin: 0;
+    line-height: 1.5;
+}
+
 /* New styles for setting rows and switch toggles */
 .setting-row {
     display: flex;

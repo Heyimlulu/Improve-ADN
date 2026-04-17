@@ -16,11 +16,9 @@ export const Utils = {
         for (const selector of selectors) {
             const element = document.querySelector(selector);
             if (element) {
-                console.log(`Found ${elementType} using selector: ${selector}`);
                 return element;
             }
         }
-        console.warn(`No ${elementType} found with any selector`);
         return null;
     },
 

@@ -28,8 +28,11 @@ export class ADNImproverApp {
             // Only search for video element on video playback pages
             if (this.isVideoPlaybackPage()) {
                 await this.findVideoElement();
+                // Enable theater mode automatically on video pages
+                if (this.settingsManager.handlers?.theaterMode) {
+                    this.settingsManager.handlers.theaterMode.toggle(true);
+                }
             } else {
-                console.log('ADN Improver: Not a video playback page, skipping video element search');
                 // Ensure theater mode is disabled on non-video pages
                 this.disableTheaterModeOnNonVideoPages();
             }
@@ -42,16 +45,12 @@ export class ADNImproverApp {
             
             // Setup navigation listener to handle page changes
             this.setupNavigationListener();
-            
-            console.log('ADN Improver initialized successfully');
         } catch (error) {
-            console.error('ADN Improver initialization failed:', error);
         }
     }
 
     async initializeConstants() {
         // Constants are already imported, but we can add any dynamic initialization here
-        console.log('ADN Improver: Constants initialized');
     }
 
     async findVideoElement() {
@@ -65,13 +64,11 @@ export class ADNImproverApp {
                     this.appState.video = video;
                     this.appState.playerControls = video.closest(SELECTORS.PLAYER_CONTAINER)
                         ?.querySelector(SELECTORS.CONTROL_BAR);
-                    console.log('ADN Improver: Video element found');
                     resolve(video);
                 } else if (attempts < maxAttempts) {
                     attempts++;
                     setTimeout(find, TIMING.VIDEO_SEARCH_INTERVAL);
                 } else {
-                    console.warn('ADN Improver: Video element not found after maximum attempts');
                     reject(new Error('Video element not found after maximum attempts'));
                 }
             };
@@ -84,7 +81,6 @@ export class ADNImproverApp {
             const syncData = await chrome.storage.sync.get(DEFAULT_SETTINGS);
             this.settingsManager.applyAllSettings(syncData);
         } catch (error) {
-            console.warn('Failed to load settings, using defaults:', error);
             this.settingsManager.applyAllSettings(DEFAULT_SETTINGS);
         }
     }
@@ -119,15 +115,11 @@ export class ADNImproverApp {
         this.appState.observers.push(observer);
     }
 
-    handleNavigation() {
-        console.log('ADN Improver: Page navigation detected');
+        handleNavigation() {
         
-        // If we're on a video playback page, enable theater mode if setting is enabled
+        // Always enable theater mode on video playback pages
         if (this.isVideoPlaybackPage()) {
-            // Re-apply theater mode setting on video pages
-            const currentSettings = this.appState.settings || {};
-            if (currentSettings.theaterMode && this.settingsManager.handlers?.theaterMode) {
-                console.log('ADN Improver: Enabling theater mode on video page');
+            if (this.settingsManager.handlers?.theaterMode) {
                 this.settingsManager.handlers.theaterMode.toggle(true);
             }
         } else {
@@ -139,7 +131,6 @@ export class ADNImproverApp {
     disableTheaterModeOnNonVideoPages() {
         // Force disable theater mode CSS class
         if (document.body.classList.contains(CSS_CLASSES.THEATER_MODE)) {
-            console.log('ADN Improver: Disabling theater mode on non-video page');
             document.body.classList.remove(CSS_CLASSES.THEATER_MODE);
             
             // Update theater mode handler state if available

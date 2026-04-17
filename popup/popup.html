@@ -11,53 +11,18 @@
     <div class="main-content">
         <div class="tabs">
             <button class="tab-link active" data-tab="general">General</button>
-            <button class="tab-link" data-tab="playback">Playback</button>
-            <button class="tab-link" data-tab="ui">UI</button>
-            <button class="tab-link" data-tab="manage">Manage</button>
+            <button class="tab-link" data-tab="manage">Settings</button>
         </div>
 
         <div id="general" class="tab-content active">
-            <div class="setting-row">
-                <span>Theater Mode</span>
-                <label class="switch">
-                    <input type="checkbox" id="theaterMode">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <div id="playback" class="tab-content">
-            <div class="setting-row">
-                <span>Playback Speed Control</span>
-                <label class="switch">
-                    <input type="checkbox" id="playbackSpeedControl">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="setting-row">
-                <span>Picture-in-Picture Button</span>
-                <label class="switch">
-                    <input type="checkbox" id="pipButton">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <div id="ui" class="tab-content">
-            <div class="setting-row">
-                <span>Hide Scrollbar</span>
-                <label class="switch">
-                    <input type="checkbox" id="hideScrollbar">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <p class="info-text">Theater mode is automatically enabled on all video pages.</p>
         </div>
 
         <div id="manage" class="tab-content">
-            <button id="backup">Backup Settings</button>
-            <button id="restore">Restore Settings</button>
+            <button id="backup">Backup</button>
+            <button id="restore">Restore</button>
             <input type="file" id="restore-input" style="display: none;">
-            <button id="reset">Reset All Settings</button>
+            <button id="reset">Reset</button>
         </div>
     </div>
     <script src="popup.js"></script>
