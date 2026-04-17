@@ -221,6 +221,114 @@ class TheaterModeHandler {
 const theaterModeHandler = new TheaterModeHandler();
 
 /**
+ * Pause Overlay Handler
+ * Shows a black overlay when video is paused
+ */
+class PauseOverlayHandler {
+    constructor() {
+        this.overlay = null;
+        this.videoElement = null;
+        this.handlePlay = this.handlePlay.bind(this);
+        this.handlePause = this.handlePause.bind(this);
+    }
+
+    init(video) {
+        if (!video) return;
+        
+        this.videoElement = video;
+        
+        // Create overlay element
+        this.createOverlay();
+        
+        // Add event listeners
+        appState.addEventListenerTracked(video, 'play', this.handlePlay);
+        appState.addEventListenerTracked(video, 'pause', this.handlePause);
+        
+        // Set initial state
+        if (video.paused) {
+            this.showOverlay();
+        }
+    }
+
+    createOverlay() {
+        // Find the video player container
+        const playerContainer = this.videoElement.closest('.video-js');
+        if (!playerContainer) return;
+        
+        // Create overlay div
+        this.overlay = document.createElement('div');
+        this.overlay.className = 'adn-improver-pause-overlay';
+        
+        // Extract and add episode title
+        this.addEpisodeTitle();
+        
+        // Insert overlay into player container
+        playerContainer.appendChild(this.overlay);
+    }
+
+    addEpisodeTitle() {
+        // Find the h1 title element
+        const h1Element = document.querySelector('h1.sc-c71a35ae-3');
+        if (!h1Element) return;
+        
+        // Extract episode title and show name
+        const episodeSpan = h1Element.querySelector('span.sc-c71a35ae-5');
+        const showLink = h1Element.querySelector('a.sc-c71a35ae-4');
+        
+        if (episodeSpan || showLink) {
+            const titleContainer = document.createElement('div');
+            titleContainer.className = 'adn-improver-overlay-title';
+            
+            if (showLink) {
+                const showName = document.createElement('div');
+                showName.className = 'adn-improver-overlay-show';
+                showName.textContent = showLink.textContent;
+                titleContainer.appendChild(showName);
+            }
+            
+            if (episodeSpan) {
+                const episodeName = document.createElement('div');
+                episodeName.className = 'adn-improver-overlay-episode';
+                episodeName.textContent = episodeSpan.textContent.trim();
+                titleContainer.appendChild(episodeName);
+            }
+            
+            this.overlay.appendChild(titleContainer);
+        }
+    }
+
+    showOverlay() {
+        if (this.overlay) {
+            this.overlay.classList.add('visible');
+        }
+    }
+
+    hideOverlay() {
+        if (this.overlay) {
+            this.overlay.classList.remove('visible');
+        }
+    }
+
+    handlePlay() {
+        this.hideOverlay();
+    }
+
+    handlePause() {
+        this.showOverlay();
+    }
+
+    cleanup() {
+        if (this.overlay && this.overlay.parentNode) {
+            this.overlay.parentNode.removeChild(this.overlay);
+        }
+        this.overlay = null;
+        this.videoElement = null;
+    }
+}
+
+const pauseOverlayHandler = new PauseOverlayHandler();
+
+/**
  * Settings Manager
  */
 class SettingsManager {
@@ -290,6 +398,10 @@ class ADNImproverApp {
                     appState.video = video;
                     appState.playerControls = video.closest(SELECTORS.PLAYER_CONTAINER)
                         ?.querySelector(SELECTORS.CONTROL_BAR);
+                    
+                    // Initialize pause overlay handler
+                    pauseOverlayHandler.init(video);
+                    
                     resolve(video);
                 } else if (attempts < maxAttempts) {
                     attempts++;
@@ -367,6 +479,7 @@ class ADNImproverApp {
     }
 
     cleanup() {
+        pauseOverlayHandler.cleanup();
         appState.cleanup();
     }
 }
