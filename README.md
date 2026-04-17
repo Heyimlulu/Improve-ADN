@@ -5,7 +5,7 @@ Enhances the ADN Streaming experience with new features.
 - Bigger video player
 - Control video playback speed in the existing player settings (Not available yet)
 - Add Picture-in-Picture button (Not available yet)
-- Backup settings (Not available yet)
+- Backup settings (Implemented but not useful yet)
 
 ## Browser support
 
