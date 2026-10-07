@@ -1,0 +1,66 @@
+/* ==========================================================================
+   ADN Improver – shared variables, OSD, scrollbar
+   All rules are scoped by `adn-improver-*` classes or `data-adn-*` attributes
+   set on <html> by the content script.
+   ========================================================================== */
+
+:root {
+    --adn-improver-accent: #0095ff;
+    --adn-improver-fg: #ffffff;
+    --adn-improver-bg: rgba(12, 16, 24, 0.86);
+    --adn-improver-bg-strong: rgba(12, 16, 24, 0.96);
+    --adn-improver-radius: 10px;
+    --adn-improver-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    --adn-improver-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --adn-improver-transition: 0.2s ease;
+}
+
+/* ----------------------------------------------------------- Scrollbar -- */
+
+html[data-adn-scrollbar="hidden"] {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html[data-adn-scrollbar="hidden"]::-webkit-scrollbar,
+html[data-adn-scrollbar="hidden"] body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* ----------------------------------------------------------------- OSD -- */
+
+.adn-improver-osd {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.6em 1.1em;
+    border-radius: 999px;
+    background: var(--adn-improver-bg);
+    color: var(--adn-improver-fg);
+    font: 600 clamp(14px, 1.3vw, 20px) / 1 var(--adn-improver-font);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(0.96);
+    transition: opacity var(--adn-improver-transition), transform var(--adn-improver-transition);
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    box-shadow: var(--adn-improver-shadow);
+    z-index: 5;
+}
+
+.adn-improver-osd.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+}
+
+.adn-improver-osd svg {
+    width: 1.4em;
+    height: 1.4em;
+    flex: none;
+}

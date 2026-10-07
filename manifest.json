@@ -1,13 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "ADN Improver",
-  "version": "2.0.0",
-  "description": "Enhances the ADN Streaming experience with new features.",
+  "name": "__MSG_extName__",
+  "version": "3.0.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "fr",
+  "author": "Heyimlulu",
+  "homepage_url": "https://github.com/Heyimlulu/Improve-ADN",
+  "icons": {
+    "64": "icons/icon-64x64.png"
+  },
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "https://animationdigitalnetwork.com/*"
+    "https://animationdigitalnetwork.com/*",
+    "https://animationdigitalnetwork.fr/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -18,28 +25,38 @@
   "content_scripts": [
     {
       "matches": [
-        "https://animationdigitalnetwork.com/*"
+        "https://animationdigitalnetwork.com/*",
+        "https://animationdigitalnetwork.fr/*"
       ],
       "js": [
         "content/content.js"
       ],
       "css": [
-        "content/content.css",
-        "content/theater.css"
-      ]
+        "content/styles/base.css",
+        "content/styles/player.css",
+        "content/styles/theater.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "shared/constants.js"
+        "content/main.js",
+        "content/core/*.js",
+        "content/features/*.js",
+        "shared/*.js"
       ],
       "matches": [
-        "https://animationdigitalnetwork.com/*"
+        "https://animationdigitalnetwork.com/*",
+        "https://animationdigitalnetwork.fr/*"
       ]
     }
   ],
-  "icons": {
-    "64": "icons/icon-64x64.png"
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "adn-improver@heyimlulu.github.io",
+      "strict_min_version": "115.0"
+    }
   }
 }

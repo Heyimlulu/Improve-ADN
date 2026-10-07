@@ -1,15 +1,30 @@
 {
   "name": "adn-improver",
-  "version": "2.0.0",
-  "description": "Build script for ADN Improver extension",
+  "version": "3.0.0",
+  "description": "Browser extension improving the ADN (Animation Digital Network) streaming experience",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "build": "node build.js",
+    "build": "node scripts/build.js",
+    "lint": "eslint .",
+    "check": "node scripts/check.js",
+    "test": "npm run lint && npm run check",
     "version:patch": "node scripts/version.js patch",
     "version:minor": "node scripts/version.js minor",
-    "version:major": "node scripts/version.js major"
+    "version:major": "node scripts/version.js major",
+    "test:e2e": "node test/e2e/run.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Heyimlulu/Improve-ADN.git"
+  },
+  "license": "MIT",
   "devDependencies": {
-    "archiver": "^5.3.1",
-    "semver": "^7.3.5"
+    "@eslint/js": "^10.0.0",
+    "archiver": "^7.0.1",
+    "eslint": "^10.0.0",
+    "globals": "^16.0.0",
+    "playwright": "1.56.1",
+    "semver": "^7.6.3"
   }
 }

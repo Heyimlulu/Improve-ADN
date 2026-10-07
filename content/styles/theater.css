@@ -1,0 +1,155 @@
+/* ==========================================================================
+   ADN Improver – theater mode
+
+   Active while <html data-adn-theater="fill|fit">. The content script marks
+   the DOM around the player (see features/theater-mode.js):
+
+     [data-adn-theater-wrapper]  element stretched to the viewport
+     [data-adn-theater-inner]    elements between the wrapper and .video-js
+     [data-adn-theater-chain]    every ancestor of the wrapper
+     [data-adn-theater-row]      container laying out a sidebar next to the player
+     [data-adn-theater-column]   the player's column inside that row
+     [data-adn-theater-aside]    the sidebar(s), moved under the player
+     [data-adn-theater-header]   the site header (hidden, slides in on demand)
+
+   CSS variables fed by the script:
+     --adn-vw              viewport width without the scrollbar (on <html>)
+     --adn-theater-shift   horizontal offset so the wrapper starts at x = 0
+   ========================================================================== */
+
+html[data-adn-theater] {
+    --adn-theater-viewport-height: 100vh;
+    --adn-theater-height: var(--adn-theater-viewport-height);
+}
+
+@supports (height: 100dvh) {
+    html[data-adn-theater] {
+        --adn-theater-viewport-height: 100dvh;
+    }
+}
+
+/* "Fit": full width, 16:9, never taller than the viewport. */
+html[data-adn-theater="fit"] {
+    --adn-theater-height: min(var(--adn-theater-viewport-height), calc(var(--adn-vw, 100vw) * 9 / 16));
+}
+
+html[data-adn-theater] body {
+    overflow-x: hidden;
+}
+
+/* While the script measures the native layout, nothing may animate. */
+html[data-adn-measuring],
+html[data-adn-measuring] * {
+    transition: none !important;
+}
+
+/* --------------------------------------------------------------- Layout -- */
+
+/* Ancestors must not clip the stretched player nor keep room for the header. */
+html[data-adn-theater] [data-adn-theater-chain] {
+    overflow: visible !important;
+    max-height: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Sidebar next to the player -> below the player. */
+html[data-adn-theater] [data-adn-theater-row] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+}
+
+html[data-adn-theater] [data-adn-theater-column],
+html[data-adn-theater] [data-adn-theater-aside] {
+    width: 100% !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* The wrapper becomes a viewport-sized black stage, still in the page flow
+   so everything below stays reachable by scrolling. */
+html[data-adn-theater] [data-adn-theater-wrapper] {
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: var(--adn-vw, 100vw) !important;
+    max-width: none !important;
+    height: var(--adn-theater-height) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 0 0 var(--adn-theater-shift, 0px) !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: #000 !important;
+    transition: height 0.25s ease;
+}
+
+html[data-adn-theater] [data-adn-theater-inner] {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+}
+
+html[data-adn-theater] [data-adn-theater-wrapper] .video-js {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: #000 !important;
+}
+
+/* When the wrapper is the player itself. */
+html[data-adn-theater] [data-adn-theater-wrapper].video-js {
+    position: relative !important;
+    inset: auto !important;
+}
+
+html[data-adn-theater] [data-adn-theater-wrapper] video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+}
+
+/* Native fullscreen always wins over the theater geometry. */
+html[data-adn-theater] .video-js:fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+}
+
+/* --------------------------------------------------------------- Header -- */
+
+html[data-adn-theater] [data-adn-theater-header] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    z-index: 2147483000 !important;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+html[data-adn-theater][data-adn-header="visible"] [data-adn-theater-header],
+html[data-adn-theater][data-adn-header-hover="true"] [data-adn-theater-header]:hover {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+}
