@@ -6,6 +6,7 @@
 
      [data-adn-theater-wrapper]  element stretched to the viewport
      [data-adn-theater-inner]    elements between the wrapper and .video-js
+     [data-adn-theater-stage]    the wrapper's parent: flex column, player ordered first
      [data-adn-theater-chain]    every ancestor of the wrapper
      [data-adn-theater-row]      container laying out a sidebar next to the player
      [data-adn-theater-column]   the player's column inside that row
@@ -51,6 +52,17 @@ html[data-adn-theater] [data-adn-theater-chain] {
     max-height: none !important;
     padding-top: 0 !important;
     margin-top: 0 !important;
+}
+
+/* The player goes first in its column, above the title block ADN renders before it. */
+html[data-adn-theater] [data-adn-theater-stage] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+html[data-adn-theater] [data-adn-theater-stage] > [data-adn-theater-wrapper] {
+    order: -1;
 }
 
 /* Sidebar next to the player -> below the player. */
@@ -123,6 +135,17 @@ html[data-adn-theater] [data-adn-theater-wrapper] video {
     width: 100% !important;
     height: 100% !important;
     object-fit: contain;
+}
+
+/* ADN's fluid layout sizes an inner wrapper with padding-bottom: 56.25%;
+   inside the stage it must simply fill it. */
+html[data-adn-theater] [data-adn-theater-wrapper] .vjs-video-wrapper,
+html[data-adn-theater] [data-adn-theater-wrapper] .vjs-video-aspect-ratio {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
 }
 
 /* Native fullscreen always wins over the theater geometry. */

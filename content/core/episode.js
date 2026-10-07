@@ -35,6 +35,10 @@ export function getEpisodeInfo() {
     return { show: '', episode: '' };
 }
 
+function isVisible(element) {
+    return element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden';
+}
+
 /** Remove decorative separators ("·", "-", "|", ":") around a title fragment. */
 function trimSeparators(text) {
     return text.replace(/^[\s·•\-–—|:]+|[\s·•\-–—|:]+$/g, '');
@@ -60,12 +64,26 @@ export function findPreviousEpisodeControl() {
     return findEpisodeControl(PREVIOUS_WORDS, -1);
 }
 
+/** video.js wrappers ADN uses for its native previous / next episode buttons. */
+const NATIVE_CONTROLS = {
+    1: '.vjs-control-next-video',
+    [-1]: '.vjs-control-previous-video',
+};
+
 function findEpisodeControl(words, direction) {
-    // 1. Explicit controls (aria-label, title, text, data-testid).
+    // 1. The player's own buttons (hidden on the first / last episode).
+    const wrapper = document.querySelector(NATIVE_CONTROLS[direction]);
+    if (wrapper && !wrapper.classList.contains('vjs-hidden')) {
+        const button = wrapper.querySelector('button, [role="button"]') ?? wrapper;
+        if (getComputedStyle(button).display !== 'none') return button;
+    }
+
+    // 2. Explicit controls (aria-label, title, text, data-testid).
     const candidates = document.querySelectorAll(
         'a[href*="/video/"], button, [role="button"], [data-testid*="next"], [data-testid*="prev"]',
     );
     for (const candidate of candidates) {
+        if (!isVisible(candidate)) continue;
         const label = [
             candidate.getAttribute('aria-label'),
             candidate.getAttribute('title'),
@@ -77,7 +95,7 @@ function findEpisodeControl(words, direction) {
         if (label.length < 120 && words.test(label)) return candidate;
     }
 
-    // 2. Episode list: the item after/before the one matching the current URL.
+    // 3. Episode list: the item after/before the one matching the current URL.
     const items = [...document.querySelectorAll('[data-testid^="season-list-item-"]')];
     const currentIndex = items.findIndex((item) =>
         [...item.querySelectorAll('a[href]')].some((a) => a.pathname === window.location.pathname),

@@ -14,9 +14,13 @@
  *                   element stretched to the viewport.
  *   2. `inner`    : elements between the wrapper and `.video-js`; they are made
  *                   transparent to the layout so the player fills the wrapper.
- *   3. `chain`    : every ancestor of `wrapper` up to <body>; they must not clip
+ *   3. `stage`    : the wrapper's parent. ADN renders the title block *above*
+ *                   the player in the same column; the stage becomes a flex
+ *                   column and the wrapper is ordered first, so the player
+ *                   sits at the very top without touching the DOM order.
+ *   4. `chain`    : every ancestor of `wrapper` up to <body>; they must not clip
  *                   the stretched wrapper (`overflow: visible`).
- *   4. `row`      : the first ancestor that lays out something *next to* the
+ *   5. `row`      : the first ancestor that lays out something *next to* the
  *                   player (e.g. a sidebar). It is switched to a vertical flow so
  *                   the sidebar moves under the player.
  *
@@ -31,13 +35,14 @@ const MARKS = Object.freeze({
     WRAPPER: 'data-adn-theater-wrapper',
     INNER: 'data-adn-theater-inner',
     CHAIN: 'data-adn-theater-chain',
+    STAGE: 'data-adn-theater-stage',
     ROW: 'data-adn-theater-row',
     COLUMN: 'data-adn-theater-column',
     ASIDE: 'data-adn-theater-aside',
     HEADER: 'data-adn-theater-header',
 });
 
-const HEADER_SELECTORS = ['body > header', 'header', '[data-testid*="header" i]', 'body > nav'];
+const HEADER_SELECTORS = ['header[data-testid="menuContent"]', 'body > header', 'header', '[data-testid*="header" i]', 'body > nav'];
 const HEADER_HOVER_ZONE_PX = 64;
 const RELAYOUT_DELAYS_MS = [0, 600, 2500];
 const IGNORED_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT']);
@@ -156,6 +161,12 @@ export class TheaterMode extends Feature {
             // Elements between the wrapper and the player must let it fill the stage.
             for (let inner = container.parentElement; inner && inner !== wrapper; inner = inner.parentElement) {
                 this.#mark(inner, MARKS.INNER);
+            }
+
+            // Put the player before whatever precedes it in its column (title, tags...).
+            const stage = wrapper.parentElement;
+            if (stage && stage !== document.body && stage.tagName !== 'MAIN') {
+                this.#mark(stage, MARKS.STAGE);
             }
 
             const wrapperRect = wrapper.getBoundingClientRect();

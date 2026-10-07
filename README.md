@@ -66,7 +66,7 @@ npx playwright install chromium
 npm run test:e2e    # loads the extension in headless Chromium against a mock watch page
 ```
 
-The end-to-end test (`test/e2e/`) intercepts `animationdigitalnetwork.com` and serves `mock-watch.html`, a page reproducing the structure of an ADN watch page (video.js player, sidebar, episode list, comments). It checks the theater geometry, header behaviour, injected controls, gradient handling, shortcuts, pause overlay, SPA navigation and the popup. Screenshots are written to `test/e2e/screenshots/`.
+The end-to-end test (`test/e2e/`) intercepts `animationdigitalnetwork.com` and serves `fixtures/watch-page.html`, the real DOM of an ADN watch page stripped of scripts and external assets (see `test/e2e/fixtures/README.md`). It checks the theater geometry, header behaviour, injected controls, gradient handling, shortcuts, pause overlay, SPA navigation and the popup. Screenshots are written to `test/e2e/screenshots/`.
 
 Set `localStorage.adnImproverDebug = '1'` in the ADN tab's console to get verbose logs prefixed with `[ADN Improver]`.
 
@@ -88,7 +88,7 @@ content/
   styles/                base.css, player.css, theater.css
 popup/                   settings UI rendered from the schema
 scripts/                 build, version bump, static checks
-test/e2e/                Playwright smoke test + mock ADN watch page
+test/e2e/                Playwright smoke test + real ADN watch page fixture
 ```
 
 ### How it works

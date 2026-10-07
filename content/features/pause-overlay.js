@@ -1,15 +1,20 @@
 /**
- * Dims the picture and shows the show / episode title while the video is
- * paused (Netflix style). The overlay never captures pointer events so the
- * player keeps reacting to clicks.
+ * Dims the picture and shows the show / episode title (plus the synopsis the
+ * player exposes) while the video is paused, Netflix style. The overlay never
+ * captures pointer events so the player keeps reacting to clicks.
+ *
+ * ADN draws its own title block inside the player (`.vjs-meta-display`); it
+ * is hidden while this feature is on so the information is not shown twice
+ * (see `html[data-adn-pause-overlay]` in player.css).
  */
 
 import { Feature } from '../core/feature.js';
-import { createElement } from '../core/dom.js';
+import { createElement, setRootAttribute } from '../core/dom.js';
 import { getEpisodeInfo } from '../core/episode.js';
 import { PLAYER_SELECTORS } from '../core/player.js';
 
 const SHOW_DELAY_MS = 400;
+const NATIVE_SUMMARY_SELECTOR = '.vjs-meta-summary';
 
 export class PauseOverlay extends Feature {
     static id = 'pause-overlay';
@@ -19,7 +24,12 @@ export class PauseOverlay extends Feature {
     #timer = null;
 
     onEnable() {
+        setRootAttribute('data-adn-pause-overlay', 'true');
         this.onEachVideo((video, container, scope) => this.#attach(video, container, scope));
+    }
+
+    onDisable() {
+        setRootAttribute('data-adn-pause-overlay', null);
     }
 
     #attach(video, container, scope) {
@@ -61,10 +71,12 @@ export class PauseOverlay extends Feature {
         if (!overlay || !video || !video.paused) return;
 
         const { show, episode } = getEpisodeInfo();
+        const summary = overlay.parentElement?.querySelector(NATIVE_SUMMARY_SELECTOR)?.textContent.trim() ?? '';
         const title = overlay.firstElementChild;
         title.replaceChildren(
             show ? createElement('div', { class: 'adn-improver-pause-overlay-show', text: show }) : null,
             episode ? createElement('div', { class: 'adn-improver-pause-overlay-episode', text: episode }) : null,
+            summary ? createElement('p', { class: 'adn-improver-pause-overlay-summary', text: summary }) : null,
         );
         overlay.classList.add('is-visible');
     }
