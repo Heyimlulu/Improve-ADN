@@ -27,7 +27,7 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Bump version
         run: npm run version:${{ github.event.inputs.version_type }}

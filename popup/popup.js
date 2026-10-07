@@ -1,321 +1,251 @@
 /**
- * ADN Improver Popup Settings Manager
+ * Popup: renders the settings from `shared/settings-schema.js`, saves them
+ * on change and offers backup / restore / reset.
  */
 
-// Import shared constants
-let DEFAULT_SETTINGS, SETTING_KEYS;
+import { SECTIONS, SETTINGS_SCHEMA, sanitizeSettings } from '../shared/settings-schema.js';
+import { SettingsStore } from '../shared/storage.js';
+import { SHORTCUTS } from '../shared/shortcuts.js';
+import { t, localizeDom } from '../shared/i18n.js';
 
-// Initialize constants from shared file
-async function initializeConstants() {
+const MANAGE_SECTION = { id: 'manage', label: 'sectionManage' };
+const ACTIVE_TAB_KEY = 'adnImproverPopupTab';
+const BACKUP_FORMAT = 'adn-improver-settings';
+
+const store = new SettingsStore();
+const controls = new Map(); // key -> input element
+
+/** @param {HTMLElement} element */
+function show(element, visible) {
+    element.hidden = !visible;
+}
+
+function template(id) {
+    return document.getElementById(id).content.firstElementChild.cloneNode(true);
+}
+
+function toast(message) {
+    const element = document.getElementById('toast');
+    element.textContent = message;
+    element.classList.add('is-visible');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => element.classList.remove('is-visible'), 2200);
+}
+
+// ------------------------------------------------------------- Rendering --
+
+function renderTabs() {
+    const tabs = document.getElementById('tabs');
+    for (const section of [...SECTIONS, MANAGE_SECTION]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tab';
+        button.role = 'tab';
+        button.dataset.section = section.id;
+        button.textContent = t(section.label);
+        button.addEventListener('click', () => activateTab(section.id));
+        tabs.append(button);
+    }
+}
+
+function renderSections() {
+    const content = document.getElementById('content');
+    for (const section of SECTIONS) {
+        const panel = document.createElement('section');
+        panel.className = 'panel';
+        panel.dataset.section = section.id;
+        panel.role = 'tabpanel';
+        for (const entry of SETTINGS_SCHEMA.filter((item) => item.section === section.id)) {
+            panel.append(renderSetting(entry));
+        }
+        if (section.id === 'shortcuts') panel.append(renderShortcutList());
+        content.append(panel);
+    }
+
+    const manage = document.createElement('section');
+    manage.className = 'panel';
+    manage.dataset.section = MANAGE_SECTION.id;
+    manage.append(document.getElementById('tpl-manage').content.cloneNode(true));
+    content.append(manage);
+}
+
+function renderSetting(entry) {
+    const row = template(`tpl-${entry.type === 'boolean' ? 'switch' : entry.type}`);
+    row.dataset.key = entry.key;
+    if (entry.dependsOn) row.dataset.dependsOn = entry.dependsOn;
+    row.querySelector('.row-label').textContent = t(entry.label);
+    const description = row.querySelector('.row-desc');
+    if (entry.description) description.textContent = t(entry.description);
+    else description.remove();
+
+    const input = row.querySelector('input, select');
+    input.id = `setting-${entry.key}`;
+
+    if (entry.type === 'select') {
+        for (const option of entry.options) {
+            const element = document.createElement('option');
+            element.value = option.value;
+            element.textContent = t(option.label);
+            input.append(element);
+        }
+    } else if (entry.type === 'number') {
+        input.min = entry.min;
+        input.max = entry.max;
+        input.step = entry.step ?? 1;
+    }
+
+    input.addEventListener('change', () => {
+        const value = entry.type === 'boolean' ? input.checked : entry.type === 'number' ? Number(input.value) : input.value;
+        store.set({ [entry.key]: value });
+    });
+
+    controls.set(entry.key, input);
+    return row;
+}
+
+function renderShortcutList() {
+    const card = document.createElement('section');
+    card.className = 'card card-shortcuts';
+    const title = document.createElement('h2');
+    title.textContent = t('shortcutsListTitle');
+    card.append(title);
+
+    const list = document.createElement('div');
+    list.className = 'shortcut-list';
+    for (const shortcut of SHORTCUTS) {
+        const row = document.createElement('div');
+        row.className = 'shortcut-row';
+        const keys = document.createElement('div');
+        keys.className = 'shortcut-keys';
+        for (const key of shortcut.keys) {
+            const kbd = document.createElement('kbd');
+            kbd.textContent = key === 'Space' ? t('keySpace') : key;
+            keys.append(kbd);
+        }
+        const label = document.createElement('div');
+        label.className = 'shortcut-label';
+        label.dataset.label = shortcut.label;
+        if (shortcut.param) label.dataset.param = shortcut.param;
+        row.append(keys, label);
+        list.append(row);
+    }
+    card.append(list);
+    return card;
+}
+
+function refreshShortcutLabels() {
+    for (const label of document.querySelectorAll('.shortcut-label')) {
+        const substitutions = label.dataset.param ? [String(store.get(label.dataset.param))] : undefined;
+        label.textContent = t(label.dataset.label, substitutions);
+    }
+}
+
+// ----------------------------------------------------------------- State --
+
+function applyValues() {
+    for (const entry of SETTINGS_SCHEMA) {
+        const input = controls.get(entry.key);
+        const value = store.get(entry.key);
+        if (entry.type === 'boolean') input.checked = value;
+        else input.value = String(value);
+    }
+    for (const row of document.querySelectorAll('[data-depends-on]')) {
+        row.classList.toggle('is-disabled', !store.get(row.dataset.dependsOn));
+    }
+    refreshShortcutLabels();
+}
+
+function activateTab(sectionId) {
+    for (const tab of document.querySelectorAll('.tab')) {
+        const active = tab.dataset.section === sectionId;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', String(active));
+    }
+    for (const panel of document.querySelectorAll('.panel')) {
+        show(panel, panel.dataset.section === sectionId);
+    }
     try {
-        const constants = await import(chrome.runtime.getURL('shared/constants.js'));
-        DEFAULT_SETTINGS = constants.DEFAULT_SETTINGS;
-        SETTING_KEYS = constants.SETTING_KEYS;
-        } catch (error) {
-        // Fallback constants
-        DEFAULT_SETTINGS = {
-            theaterMode: false,
-            playbackSpeedControl: true,
-            hideScrollbar: false,
-            pipButton: true
+        localStorage.setItem(ACTIVE_TAB_KEY, sectionId);
+    } catch {
+        /* storage may be unavailable, the tab simply is not remembered */
+    }
+}
+
+// ------------------------------------------------------ Backup / restore --
+
+function downloadBackup() {
+    try {
+        const payload = {
+            format: BACKUP_FORMAT,
+            version: chrome.runtime.getManifest().version,
+            exportedAt: new Date().toISOString(),
+            settings: store.getAll(),
         };
-        SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `adn-improver-settings-${payload.exportedAt.slice(0, 10)}.json`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+        toast(t('backupFailed'));
     }
 }
 
-/**
- * Settings Manager Class
- */
-class PopupSettingsManager {
-    constructor() {
-        this.initialized = false;
-    }
-
-    /**
-     * Initialize the settings manager after constants are loaded
-     */
-    async initialize() {
-        if (this.initialized) return;
-        
-        this.setupAutoSave();
-        this.initialized = true;
-    }
-
-    /**
-     * Save all settings to chrome storage
-     */
-    async saveSettings() {
-        if (!SETTING_KEYS) return;
-        
-        try {
-            const settings = {};
-            
-            SETTING_KEYS.forEach(key => {
-                const element = document.getElementById(key);
-                if (element) {
-                    if (element.type === 'checkbox') {
-                        settings[key] = element.checked;
-                    } else {
-                        settings[key] = element.value;
-                    }
-                }
-            });
-
-            await chrome.storage.sync.set(settings);
-        } catch (error) {
-        }
-    }
-
-    /**
-     * Restore settings from chrome storage
-     */
-    async restoreSettings() {
-        if (!DEFAULT_SETTINGS || !SETTING_KEYS) return;
-        
-        try {
-            const items = await chrome.storage.sync.get(DEFAULT_SETTINGS);
-            
-            SETTING_KEYS.forEach(key => {
-                const element = document.getElementById(key);
-                if (element && items.hasOwnProperty(key)) {
-                    if (element.type === 'checkbox') {
-                        element.checked = items[key];
-                    } else {
-                        element.value = items[key];
-                    }
-                }
-            });
-            } catch (error) {
-            // Fallback to default settings
-            this.applyDefaultSettings();
-        }
-    }
-
-    /**
-     * Apply default settings to UI elements
-     */
-    applyDefaultSettings() {
-        if (!DEFAULT_SETTINGS || !SETTING_KEYS) return;
-        
-        SETTING_KEYS.forEach(key => {
-            const element = document.getElementById(key);
-            if (element && DEFAULT_SETTINGS.hasOwnProperty(key)) {
-                if (element.type === 'checkbox') {
-                    element.checked = DEFAULT_SETTINGS[key];
-                } else {
-                    element.value = DEFAULT_SETTINGS[key];
-                }
-            }
-        });
-    }
-
-    /**
-     * Setup auto-save functionality
-     */
-    setupAutoSave() {
-        if (!SETTING_KEYS) return;
-        
-        SETTING_KEYS.forEach(key => {
-            const element = document.getElementById(key);
-            if (element) {
-                element.addEventListener('change', () => {
-                    this.saveSettings();
-                });
-            }
-        });
-    }
-}
-
-// Initialize settings manager
-const settingsManager = new PopupSettingsManager();
-
-/**
- * Tab Management Class
- */
-class TabManager {
-    constructor() {
-        this.initializeTabs();
-    }
-
-    initializeTabs() {
-        const tabs = document.querySelectorAll('.tab-link');
-        const contents = document.querySelectorAll('.tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.switchTab(tab, tabs, contents);
-            });
-        });
-    }
-
-    switchTab(activeTab, allTabs, allContents) {
-        // Remove active class from all tabs and contents
-        allTabs.forEach(tab => tab.classList.remove('active'));
-        allContents.forEach(content => content.classList.remove('active'));
-        
-        // Add active class to clicked tab and corresponding content
-        activeTab.classList.add('active');
-        const targetContent = document.getElementById(activeTab.dataset.tab);
-        if (targetContent) {
-            targetContent.classList.add('active');
-        }
-    }
-}
-
-// Initialize components when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
+async function restoreBackup(file) {
     try {
-        // Initialize constants first
-        await initializeConstants();
-        
-        // Initialize settings manager after constants are loaded
-        await settingsManager.initialize();
-        
-        // Initialize tab management
-        new TabManager();
-        
-        // Restore settings
-        await settingsManager.restoreSettings();
-    } catch (error) {
-    }
-});
-
-
-/**
- * Backup and Restore Manager
- */
-class BackupManager {
-    constructor() {
-        this.initializeBackupControls();
-    }
-
-    initializeBackupControls() {
-        document.addEventListener('DOMContentLoaded', () => {
-            const backupBtn = document.getElementById('backup');
-            const restoreBtn = document.getElementById('restore');
-            const restoreInput = document.getElementById('restore-input');
-            const resetBtn = document.getElementById('reset');
-
-            if (backupBtn) backupBtn.addEventListener('click', () => this.backupSettings());
-            if (restoreBtn) restoreBtn.addEventListener('click', () => this.triggerRestore());
-            if (restoreInput) restoreInput.addEventListener('change', (e) => this.handleRestore(e));
-            if (resetBtn) resetBtn.addEventListener('click', () => this.resetSettings());
-        });
-    }
-
-    async backupSettings() {
-        try {
-            const [syncSettings, localSettings] = await Promise.all([
-                chrome.storage.sync.get(null),
-                chrome.storage.local.get(null)
-            ]);
-
-            const allSettings = {
-                sync: syncSettings,
-                local: localSettings,
-                timestamp: new Date().toISOString(),
-                version: '1.0.0'
-            };
-
-            const blob = new Blob(
-                [JSON.stringify(allSettings, null, 2)], 
-                { type: 'application/json' }
-            );
-            
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `adn-improver-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            this.showNotification('Backup failed. Please try again.', 'error');
-        }
-    }
-
-    triggerRestore() {
-        const restoreInput = document.getElementById('restore-input');
-        if (restoreInput) {
-            restoreInput.click();
-        }
-    }
-
-    async handleRestore(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        try {
-            const fileContent = await this.readFile(file);
-            const settings = JSON.parse(fileContent);
-            
-            // Validate backup file structure
-            if (!settings.sync && !settings.local) {
-                throw new Error('Invalid backup file format');
-            }
-
-            // Restore settings
-            const promises = [];
-            if (settings.sync) {
-                promises.push(chrome.storage.sync.set(settings.sync));
-            }
-            if (settings.local) {
-                promises.push(chrome.storage.local.set(settings.local));
-            }
-
-            await Promise.all(promises);
-            
-            // Update UI
-            await settingsManager.restoreSettings();
-            
-            this.showNotification('Settings restored successfully!', 'success');
-        } catch (error) {
-            this.showNotification('Error: Invalid backup file or restore failed.', 'error');
-        } finally {
-            // Clear the file input
-            event.target.value = '';
-        }
-    }
-
-    async resetSettings() {
-        const confirmed = confirm(
-            'Are you sure you want to reset all settings to their defaults? This cannot be undone.'
-        );
-        
-        if (!confirmed) return;
-
-        try {
-            await Promise.all([
-                chrome.storage.sync.clear(),
-                chrome.storage.local.clear()
-            ]);
-            
-            // Apply default settings to UI
-            settingsManager.applyDefaultSettings();
-            
-            this.showNotification('All settings have been reset to defaults.', 'success');
-        } catch (error) {
-            this.showNotification('Reset failed. Please try again.', 'error');
-        }
-    }
-
-    readFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = (e) => reject(e);
-            reader.readAsText(file);
-        });
-    }
-
-    showNotification(message, type = 'info') {
-        // Simple notification using alert for now
-        // Could be enhanced with a custom notification system
-        alert(message);
+        const parsed = JSON.parse(await file.text());
+        // Accept both the current format and a raw settings object.
+        const raw = parsed?.format === BACKUP_FORMAT ? parsed.settings : parsed?.settings ?? parsed;
+        if (!raw || typeof raw !== 'object') throw new Error('Invalid backup');
+        await store.set(sanitizeSettings(raw));
+        toast(t('restoreDone'));
+    } catch {
+        toast(t('restoreFailed'));
     }
 }
 
-// Initialize backup manager
-const backupManager = new BackupManager();
+function bindManageActions() {
+    document.getElementById('backup').addEventListener('click', downloadBackup);
+    const input = document.getElementById('restore-input');
+    document.getElementById('restore').addEventListener('click', () => input.click());
+    input.addEventListener('change', async () => {
+        if (input.files[0]) await restoreBackup(input.files[0]);
+        input.value = '';
+    });
+    document.getElementById('reset').addEventListener('click', async () => {
+        if (!confirm(t('confirmReset'))) return;
+        await store.reset();
+        toast(t('resetDone'));
+    });
+}
 
-// Backup manager initialization is handled in the class constructor
+// ------------------------------------------------------------------ Init --
+
+async function init() {
+    await store.load();
+
+    renderTabs();
+    renderSections();
+    localizeDom();
+    bindManageActions();
+
+    const { version } = chrome.runtime.getManifest();
+    document.getElementById('version').textContent = `v${version}`;
+    document.getElementById('about-version').textContent = t('version', [version]);
+
+    applyValues();
+    store.onChange(applyValues);
+
+    let initialTab = SECTIONS[0].id;
+    try {
+        initialTab = localStorage.getItem(ACTIVE_TAB_KEY) || initialTab;
+    } catch {
+        /* ignore */
+    }
+    if (!document.querySelector(`.panel[data-section="${initialTab}"]`)) initialTab = SECTIONS[0].id;
+    activateTab(initialTab);
+}
+
+init().catch((error) => console.error('[ADN Improver] popup failed to start', error));

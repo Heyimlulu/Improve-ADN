@@ -1,0 +1,254 @@
+/* ==========================================================================
+   ADN Improver – player additions: control-bar buttons, speed menu,
+   pause overlay, gradient handling, shortcuts help
+   ========================================================================== */
+
+/* -------------------------------------------------- Control-bar buttons -- */
+
+.adn-improver-control {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 4em;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: color var(--adn-improver-transition), opacity var(--adn-improver-transition);
+}
+
+.adn-improver-control:hover,
+.adn-improver-control:focus-visible {
+    color: var(--adn-improver-accent);
+    outline: none;
+}
+
+.adn-improver-control.is-active {
+    color: var(--adn-improver-accent);
+}
+
+.adn-improver-icon {
+    width: clamp(18px, 1.8em, 28px);
+    height: clamp(18px, 1.8em, 28px);
+    fill: currentColor;
+    pointer-events: none;
+}
+
+.adn-improver-control-text {
+    font: 600 clamp(12px, 1.3em, 16px) / 1 var(--adn-improver-font);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------- Speed menu -- */
+
+.adn-improver-menu {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    height: 100%;
+}
+
+.adn-improver-menu-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    display: none;
+    padding-bottom: 0.8em;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.adn-improver-menu:hover .adn-improver-menu-popup,
+.adn-improver-menu:focus-within .adn-improver-menu-popup,
+.adn-improver-menu.is-open .adn-improver-menu-popup {
+    display: block;
+}
+
+.adn-improver-menu-list {
+    min-width: 7.5em;
+    margin: 0;
+    padding: 0.4em 0;
+    list-style: none;
+    border-radius: var(--adn-improver-radius);
+    background: var(--adn-improver-bg-strong);
+    box-shadow: var(--adn-improver-shadow);
+    backdrop-filter: blur(8px);
+    font: 500 clamp(12px, 1.3em, 15px) / 1 var(--adn-improver-font);
+    color: var(--adn-improver-fg);
+    text-align: center;
+}
+
+.adn-improver-menu-item {
+    padding: 0.65em 1.4em;
+    cursor: pointer;
+    transition: background var(--adn-improver-transition), color var(--adn-improver-transition);
+}
+
+.adn-improver-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.adn-improver-menu-item.is-selected {
+    color: var(--adn-improver-accent);
+    font-weight: 700;
+}
+
+/* ------------------------------------------------------- Pause overlay -- */
+
+.adn-improver-pause-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.45) 55%, rgba(0, 0, 0, 0.25) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.adn-improver-pause-overlay.is-visible {
+    opacity: 1;
+}
+
+.adn-improver-pause-overlay-title {
+    position: absolute;
+    top: 50%;
+    left: 6%;
+    max-width: 62%;
+    transform: translateY(-50%);
+    color: var(--adn-improver-fg);
+    font-family: var(--adn-improver-font);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+.adn-improver-pause-overlay-show {
+    margin-bottom: 0.5em;
+    font-size: clamp(14px, 1.4vw, 22px);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--adn-improver-accent);
+}
+
+.adn-improver-pause-overlay-episode {
+    font-size: clamp(22px, 3.2vw, 52px);
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+/* --------------------------------------------- Bottom gradient handling -- */
+
+[data-adn-player-gradient] {
+    transition: opacity 0.25s ease;
+}
+
+html[data-adn-gradient="hidden"] [data-adn-player-gradient="layer"],
+html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient="layer"] {
+    opacity: 0 !important;
+}
+
+html[data-adn-gradient="hidden"] [data-adn-player-gradient="background"],
+html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient="background"] {
+    background-image: none !important;
+}
+
+/* ------------------------------------------------------ Shortcuts help -- */
+
+.adn-improver-help {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4%;
+    background: rgba(0, 0, 0, 0.55);
+    font-family: var(--adn-improver-font);
+    color: var(--adn-improver-fg);
+    z-index: 20;
+}
+
+.adn-improver-help-panel {
+    width: min(560px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    border-radius: var(--adn-improver-radius);
+    background: var(--adn-improver-bg-strong);
+    box-shadow: var(--adn-improver-shadow);
+    backdrop-filter: blur(10px);
+}
+
+.adn-improver-help-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.adn-improver-help-header h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.adn-improver-help-header .adn-improver-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--adn-improver-accent);
+}
+
+.adn-improver-help-close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.adn-improver-help-close:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.adn-improver-help-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 10px 12px 14px;
+}
+
+.adn-improver-help-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 40%) 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.adn-improver-help-row:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.adn-improver-help-keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.adn-improver-help-keys kbd {
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom-width: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    font: 600 12px / 1.2 var(--adn-improver-font);
+    white-space: nowrap;
+}

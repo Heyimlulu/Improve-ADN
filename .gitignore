@@ -8,3 +8,6 @@
 .vscode/
 .DS_Store
 npm-debug.log
+
+# End-to-end test output
+/test/e2e/screenshots
