@@ -139,6 +139,23 @@
     line-height: 1.15;
 }
 
+.adn-improver-pause-overlay-summary {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin: 1em 0 0;
+    max-width: 60ch;
+    font-size: clamp(13px, 1.1vw, 18px);
+    line-height: 1.45;
+    opacity: 0.85;
+}
+
+/* ADN's own in-player title block is replaced by the overlay above. */
+html[data-adn-pause-overlay] .video-js .vjs-meta-display {
+    display: none !important;
+}
+
 /* --------------------------------------------- Bottom gradient handling -- */
 
 [data-adn-player-gradient] {
@@ -153,6 +170,14 @@ html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-pla
 html[data-adn-gradient="hidden"] [data-adn-player-gradient="background"],
 html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient="background"] {
     background-image: none !important;
+}
+
+html[data-adn-gradient="hidden"] [data-adn-player-gradient-pseudo~="before"]::before,
+html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="before"]::before,
+html[data-adn-gradient="hidden"] [data-adn-player-gradient-pseudo~="after"]::after,
+html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="after"]::after {
+    opacity: 0 !important;
+    transition: opacity 0.25s ease;
 }
 
 /* ------------------------------------------------------ Shortcuts help -- */

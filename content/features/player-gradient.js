@@ -10,8 +10,10 @@
  *   - `native`       : feature off
  *
  * Marks:
- *   [data-adn-player-gradient="layer"]      pure overlay -> faded out
- *   [data-adn-player-gradient="background"] element that also hosts controls -> background removed
+ *   [data-adn-player-gradient="layer"]       pure overlay -> faded out
+ *   [data-adn-player-gradient="background"]  element that also hosts controls
+ *                                            (the control bar itself included) -> background removed
+ *   [data-adn-player-gradient-pseudo~="before|after"] gradient drawn by a ::before / ::after
  *   html[data-adn-controls="hidden|visible"] current control bar visibility
  */
 
@@ -20,6 +22,8 @@ import { rafThrottle, setRootAttribute } from '../core/dom.js';
 import { PLAYER_SELECTORS } from '../core/player.js';
 
 const MARK = 'data-adn-player-gradient';
+const PSEUDO_MARK = 'data-adn-player-gradient-pseudo';
+const PSEUDO_ELEMENTS = ['before', 'after'];
 const MIN_HEIGHT_PX = 24;
 const MIN_WIDTH_RATIO = 0.5;
 
@@ -83,7 +87,10 @@ export class PlayerGradient extends Feature {
         this.#controlsObserver?.disconnect();
         this.#mutationObserver = null;
         this.#controlsObserver = null;
-        for (const element of this.#marked) element.removeAttribute(MARK);
+        for (const element of this.#marked) {
+            element.removeAttribute(MARK);
+            element.removeAttribute(PSEUDO_MARK);
+        }
         this.#marked.clear();
         this.#container = null;
         setRootAttribute('data-adn-controls', null);
@@ -100,19 +107,34 @@ export class PlayerGradient extends Feature {
             if (!element.isConnected) this.#marked.delete(element);
         }
 
-        for (const element of container.querySelectorAll('*')) {
-            if (element === container || element.closest(PLAYER_SELECTORS.CONTROL_BAR)) continue;
+        const minWidth = containerRect.width * MIN_WIDTH_RATIO;
+        const isLarge = (rect) => rect.height >= MIN_HEIGHT_PX && rect.width >= minWidth;
+
+        for (const element of [container, ...container.querySelectorAll('*')]) {
             if (element.classList.contains('adn-improver-pause-overlay')) continue;
+            // Children of the control bar fade with it; the bar itself may carry the gradient.
+            const controlBar = element.closest(PLAYER_SELECTORS.CONTROL_BAR);
+            if (controlBar && controlBar !== element) continue;
 
-            const style = getComputedStyle(element);
-            if (!style.backgroundImage.includes('gradient')) continue;
+            // Gradient painted by the element itself.
+            if (element !== container && getComputedStyle(element).backgroundImage.includes('gradient')) {
+                if (isLarge(element.getBoundingClientRect())) {
+                    const hostsControls =
+                        controlBar === element || element.querySelector('button, [role="button"], .vjs-control') !== null;
+                    element.setAttribute(MARK, hostsControls ? 'background' : 'layer');
+                    this.#marked.add(element);
+                }
+            }
 
-            const rect = element.getBoundingClientRect();
-            if (rect.height < MIN_HEIGHT_PX || rect.width < containerRect.width * MIN_WIDTH_RATIO) continue;
-
-            const hostsControls = element.querySelector('button, [role="button"], .vjs-control') !== null;
-            element.setAttribute(MARK, hostsControls ? 'background' : 'layer');
-            this.#marked.add(element);
+            // Gradient painted by a ::before / ::after (cannot be measured: trust the style).
+            const pseudos = PSEUDO_ELEMENTS.filter((pseudo) => {
+                const style = getComputedStyle(element, `::${pseudo}`);
+                return style.content !== 'none' && style.backgroundImage.includes('gradient');
+            });
+            if (pseudos.length > 0) {
+                element.setAttribute(PSEUDO_MARK, pseudos.join(' '));
+                this.#marked.add(element);
+            }
         }
     }
 
