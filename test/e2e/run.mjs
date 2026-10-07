@@ -29,6 +29,7 @@ const ORIGIN = 'https://animationdigitalnetwork.com';
 const WATCH_PATH = '/video/1428-even-the-student-council-has-its-holes/32946-episode-1';
 const SHOW_TITLE = 'Even the Student Council Has Its Holes!';
 const EPISODE_TITLE = 'Épisode 1 : Il manque une case à ce gars…';
+const EXTENSION_VERSION = JSON.parse(fs.readFileSync(path.join(EXT, 'manifest.json'), 'utf8')).version;
 const SETTINGS_COUNT = 15;
 const SHORTCUTS_COUNT = 14;
 
@@ -303,7 +304,7 @@ if (extensionId) {
     check('popup renders 4 non-empty tabs', popupState.tabs.length === 4 && popupState.tabs.every(Boolean), popupState.tabs.join('|'));
     check('popup renders every setting', popupState.rows === SETTINGS_COUNT, String(popupState.rows));
     check('popup lists shortcuts with live values', popupState.shortcuts === SHORTCUTS_COUNT && /\b5 s\b/.test(popupState.seekLabel), popupState.seekLabel);
-    check('popup shows version', popupState.version === 'v3.0.0', popupState.version);
+    check('popup shows version', popupState.version === `v${EXTENSION_VERSION}`, `${popupState.version} vs manifest ${EXTENSION_VERSION}`);
     check('popup theater toggle reflects storage', popupState.theaterChecked === true);
     await popup.screenshot({ path: path.join(SHOTS, 'popup.png') });
 
