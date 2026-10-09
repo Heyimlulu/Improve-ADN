@@ -69,20 +69,33 @@ export function createControlButton({ className, label, content, onClick }) {
 /**
  * Insert `element` into `controlBar` before the first anchor found
  * (fullscreen / PiP buttons), or append it at the end, and keep its geometry
- * aligned with that anchor. Returns a function that removes the element.
+ * aligned with that anchor. The player may rebuild the bar's children later
+ * (quality switch, DRM setup...): the element is re-inserted whenever it gets
+ * removed while the bar is still there. Returns a function that removes the
+ * element for good.
  */
 export function insertIntoControlBar(controlBar, element) {
-    const anchor = ANCHOR_SELECTORS.map((selector) => controlBar.querySelector(selector)).find(Boolean);
+    let anchor = null;
 
-    if (anchor) controlBar.insertBefore(element, anchor);
-    else controlBar.append(element);
-
+    const place = () => {
+        anchor = ANCHOR_SELECTORS.map((selector) => controlBar.querySelector(selector)).find(Boolean) ?? null;
+        if (anchor) controlBar.insertBefore(element, anchor);
+        else controlBar.append(element);
+        matchReference(element, anchor);
+    };
     const harmonize = () => matchReference(element, anchor);
-    harmonize();
+
+    place();
     window.addEventListener('resize', harmonize);
     document.addEventListener('fullscreenchange', harmonize);
 
+    const observer = new MutationObserver(() => {
+        if (!element.isConnected && controlBar.isConnected) place();
+    });
+    observer.observe(controlBar, { childList: true });
+
     return () => {
+        observer.disconnect();
         window.removeEventListener('resize', harmonize);
         document.removeEventListener('fullscreenchange', harmonize);
         element.remove();
