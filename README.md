@@ -84,7 +84,7 @@ content/
   features/              one file per feature, all extend core/feature.js
   styles/                base.css, player.css, theater.css
 popup/                   settings UI (4 switches) rendered from the schema
-scripts/                 build, version bump, static checks
+scripts/                 build, version bump, static checks, store publishing
 test/e2e/                Playwright smoke test + real ADN watch page fixture
 ```
 
@@ -104,9 +104,32 @@ test/e2e/                Playwright smoke test + real ADN watch page fixture
 4. Add styles in `content/styles/`.
 5. Run `npm test`.
 
-## Release
+## Release and publishing
 
-The *Create Release* GitHub Action bumps the version, builds the zip, tags and publishes a release.
+Two GitHub Actions workflows handle the whole release chain:
+
+1. **Create Release** (manual, Actions tab): bumps the version (`patch` / `minor` / `major`), runs the checks, builds the zip, commits, tags and publishes a GitHub release with the zip attached. With the *Submit to the stores* option (default on) it then calls the publishing workflow for the new tag.
+2. **Publish to stores** (called by the release, or run by hand with a tag): rebuilds the zip from the given ref and submits it to every store whose secrets are configured. A store without secrets is skipped with a notice, so you can enable them one at a time.
+
+The same scripts work locally (`npm run build` first):
+
+```bash
+CHROME_EXTENSION_ID=… CHROME_CLIENT_ID=… CHROME_CLIENT_SECRET=… CHROME_REFRESH_TOKEN=… npm run publish:chrome
+EDGE_PRODUCT_ID=… EDGE_CLIENT_ID=… EDGE_API_KEY=… npm run publish:edge
+AMO_JWT_ISSUER=… AMO_JWT_SECRET=… npm run publish:firefox
+```
+
+### One-time setup
+
+The first listing of each store has to be created by hand (upload the zip, fill in the description, screenshots, privacy information). The pipeline then takes care of every following version. Store the credentials as repository secrets (*Settings > Secrets and variables > Actions*); the publishing jobs run in the `stores` environment, which you can create to require a manual approval before each submission.
+
+| Store | Secrets | How to get them |
+| --- | --- | --- |
+| Chrome Web Store | `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN` | Item id from the [developer dashboard](https://chrome.google.com/webstore/devconsole). Create a Google Cloud project, enable the *Chrome Web Store API*, create an OAuth client of type *Desktop app*, then obtain a refresh token for the scope `https://www.googleapis.com/auth/chromewebstore` (for example with the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) using your own client). |
+| Microsoft Edge Add-ons | `EDGE_PRODUCT_ID`, `EDGE_CLIENT_ID`, `EDGE_API_KEY` | Product id from [Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/overview). In *Publish API*, create credentials: the client id and the API key. |
+| Firefox Add-ons | `AMO_JWT_ISSUER`, `AMO_JWT_SECRET` | Generate API credentials on [addons.mozilla.org](https://addons.mozilla.org/developers/addon/api/key/). The manifest already carries the `browser_specific_settings.gecko.id` required for a listed add-on. |
+
+Submissions are reviewed by each store before going live (usually a few hours to a few days); the workflow only guarantees the upload and the submission.
 
 ## License
 

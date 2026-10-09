@@ -1,0 +1,158 @@
+name: Publish to stores
+
+# Builds the extension from a git ref and submits it to the stores whose
+# credentials are configured as repository secrets. A store without secrets
+# is skipped with a notice. Called automatically by the "Create Release"
+# workflow, or run by hand from the Actions tab.
+#
+# Secrets (see README.md, "Publishing"):
+#   Chrome  : CHROME_EXTENSION_ID, CHROME_CLIENT_ID, CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN
+#   Edge    : EDGE_PRODUCT_ID, EDGE_CLIENT_ID, EDGE_API_KEY
+#   Firefox : AMO_JWT_ISSUER, AMO_JWT_SECRET
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag or branch to publish (default: the current branch)'
+        required: false
+        type: string
+      chrome:
+        description: 'Chrome Web Store'
+        type: boolean
+        default: true
+      edge:
+        description: 'Microsoft Edge Add-ons'
+        type: boolean
+        default: true
+      firefox:
+        description: 'Firefox Add-ons'
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      chrome:
+        type: boolean
+        default: true
+      edge:
+        type: boolean
+        default: true
+      firefox:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.manifest.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and static checks
+        run: npm test
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Read version
+        id: manifest
+        run: echo "version=$(node -p "require('./manifest.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: dist/*.zip
+          if-no-files-found: error
+
+  chrome:
+    name: Chrome Web Store
+    needs: build
+    if: ${{ inputs.chrome }}
+    runs-on: ubuntu-latest
+    environment: stores
+    env:
+      CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+      CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+      CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-zip
+          path: dist
+      - name: Upload and submit for review
+        run: node scripts/publish/chrome.js
+
+  edge:
+    name: Microsoft Edge Add-ons
+    needs: build
+    if: ${{ inputs.edge }}
+    runs-on: ubuntu-latest
+    environment: stores
+    env:
+      EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+      EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+      EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-zip
+          path: dist
+      - name: Upload and submit for certification
+        run: node scripts/publish/edge.js
+
+  firefox:
+    name: Firefox Add-ons
+    needs: build
+    if: ${{ inputs.firefox }}
+    runs-on: ubuntu-latest
+    environment: stores
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-zip
+          path: dist
+      - name: Submit with web-ext
+        run: node scripts/publish/firefox.js
