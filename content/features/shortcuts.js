@@ -8,7 +8,7 @@
 
 import { Feature } from '../core/feature.js';
 import { createElement, createSvgIcon, isTypingTarget } from '../core/dom.js';
-import { ICONS } from '../core/icons.js';
+import { ICONS } from '../../shared/icons.js';
 import { PLAYBACK_RATE_STEP, SEEK_STEP, SEEK_STEP_LARGE, SHORTCUTS, VOLUME_STEP } from '../../shared/shortcuts.js';
 import { t } from '../../shared/i18n.js';
 

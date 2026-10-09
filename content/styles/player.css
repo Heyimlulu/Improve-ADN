@@ -33,8 +33,9 @@
 }
 
 .adn-improver-icon {
-    width: clamp(18px, 1.8em, 28px);
-    height: clamp(18px, 1.8em, 28px);
+    /* ADN draws its icons at 2em of the 10px control-bar font size. */
+    width: clamp(18px, 2em, 28px);
+    height: clamp(18px, 2em, 28px);
     fill: currentColor;
     pointer-events: none;
 }

@@ -1,72 +1,12 @@
-/* Minimal stand-in for ADN's external stylesheets (Tailwind utilities used on
-   the layout chain + a video.js-like skin). Only what the e2e test needs. */
+/* Minimal basics for the e2e fixture. The player skin and the layout
+   utilities come from adn.css (subset of ADN's real stylesheet). */
 
-* { box-sizing: border-box; }
 body { margin: 0; background: #04121a; color: #fff; font-family: system-ui, sans-serif; }
 img { max-width: 100%; }
 figure { margin: 0; }
 ul { margin: 0; padding: 0; list-style: none; }
-
-/* Tailwind utilities present in the DOM dump */
-.fixed { position: fixed; } .relative { position: relative; } .absolute { position: absolute; }
-.top-0 { top: 0; } .left-0 { left: 0; } .right-0 { right: 0; } .inset-0 { inset: 0; }
-.w-full { width: 100%; } .h-full { height: 100%; }
-.mx-auto { margin-left: auto; margin-right: auto; } .my-0 { margin-top: 0; margin-bottom: 0; } .py-0 { padding-top: 0; padding-bottom: 0; }
-.box-border { box-sizing: border-box; }
-.pt-\[5\.94em\] { padding-top: 5.94em; }
-.max-w-\[1920px\] { max-width: 1920px; }
-.px-\[80px\] { padding-left: 80px; padding-right: 80px; }
-.inline-block { display: inline-block; } .align-top { vertical-align: top; }
-.pr-0 { padding-right: 0; } .pr-\[16px\] { padding-right: 16px; }
-.w-\[calc\(100\%-320px\)\] { width: calc(100% - 320px); }
-.w-\[320px\] { width: 320px; } .flex-shrink-0 { flex-shrink: 0; }
-.flex { display: flex; } .flex-row { flex-direction: row; } .flex-col { flex-direction: column; }
-.items-center { align-items: center; } .justify-between { justify-content: space-between; }
-.hidden { display: none; }
-.bg-darkBlue-800 { background: #0a2233; }
-
-/* Site header (fixed, ~75px tall) */
+h1 { font-size: 24px; margin: 12px 0; }
 header[data-testid="menuContent"] { background: #0a2233; }
 header[data-testid="menuContent"] > div > div:first-child { height: 75px; }
-
-/* Content under the player */
-h1 { font-size: 24px; margin: 12px 0; }
-[data-testid="season-list"] ul { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-[data-testid="season-list"] li { background: #0f2a3d; padding: 10px; }
-#comments-panel { margin-top: 24px; min-height: 400px; padding: 16px; background: #081a26; }
-aside { display: block; min-height: 300px; margin-top: 16px; background: #0f2a3d; }
-footer { min-height: 200px; background: #02080c; }
-
-/* video.js-like skin */
-.video-js { position: relative; overflow: hidden; background: #000; color: #fff; font-size: 10px; }
-.vjs-fluid { padding-top: 56.25%; }
-.vjs-tech { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.vjs-hidden { display: none !important; }
-.vjs-poster, .vjs-loading-spinner, .vjs-select-menu-wrapper, .vjs-error-display { display: none; }
-.vjs-video-wrapper { position: absolute; inset: 0; pointer-events: none; }
-.vjs-control-bar {
-    position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center;
-    height: 4em; padding: 0 1em;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
-    transition: opacity 0.2s;
-}
-.video-js.vjs-user-inactive.vjs-playing .vjs-control-bar { opacity: 0; pointer-events: none; }
-.vjs-control { flex: none; height: 100%; color: #fff; }
-.vjs-button, .vjs-switch-video-button, .vjs-select-button { width: 4em; height: 100%; border: 0; background: none; color: #fff; cursor: pointer; }
-.vjs-progress-control, .vjs-spacer { flex: 1; }
-.vjs-switch-video-wrapper { width: 4em; }
-.vjs-big-play-button, .vjs-skip-button {
-    position: absolute; top: 50%; transform: translateY(-50%); border: 0; border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5); color: #fff; width: 64px; height: 64px; transition: opacity 0.2s;
-}
-.vjs-big-play-button { left: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; }
-.vjs-rewind-button { left: 32%; } .vjs-forward-button { right: 32%; }
-.video-js.vjs-user-inactive.vjs-playing .vjs-big-play-button,
-.video-js.vjs-user-inactive.vjs-playing .vjs-skip-button { opacity: 0; }
-
-/* Bottom shade reproduced from the bug report screenshot: a pseudo-element that
-   does NOT fade with the controls. */
-.adn-video-js::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 35%;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0)); pointer-events: none;
-}
+#comments-panel { min-height: 400px; }
+footer { min-height: 200px; }

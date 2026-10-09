@@ -5,7 +5,7 @@
 import { Feature } from '../core/feature.js';
 import { createControlButton, insertIntoControlBar } from '../core/controlbar.js';
 import { createSvgIcon } from '../core/dom.js';
-import { ICONS } from '../core/icons.js';
+import { ICONS } from '../../shared/icons.js';
 import { t } from '../../shared/i18n.js';
 
 export class TheaterButton extends Feature {

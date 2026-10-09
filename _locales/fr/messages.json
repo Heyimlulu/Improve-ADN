@@ -48,10 +48,9 @@
   "shortcutSeekPercent": { "message": "Aller à 0 %, 10 %… 90 % de la vidéo" },
   "shortcutEpisodes": { "message": "Épisode suivant / précédent" },
   "shortcutHelp": { "message": "Afficher cette aide" },
-  "shortcutsListTitle": { "message": "Raccourcis" },
+  "shortcutsListTitle": { "message": "Liste des touches" },
 
   "version": { "message": "Version $1", "placeholders": { "version": { "content": "$1" } } },
-  "viewOnGithub": { "message": "Code source" },
-  "reportIssue": { "message": "Signaler un problème" },
+  "back": { "message": "Retour" },
   "watchPageNote": { "message": "Actif sur les pages de lecture d'ADN. Les changements s'appliquent immédiatement." }
 }
