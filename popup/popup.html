@@ -8,25 +8,34 @@
 <body>
   <header class="header">
     <img class="header-logo" src="../icons/icon-64x64.png" alt="" width="28" height="28">
-    <div class="header-text">
-      <h1 data-i18n="extName">ADN Improver</h1>
-      <span class="header-version" id="version"></span>
-    </div>
+    <h1 data-i18n="extName">ADN Improver</h1>
+    <span class="header-version" id="version"></span>
   </header>
 
-  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <main class="content">
+    <section class="settings" id="settings"></section>
 
-  <main class="content" id="content"></main>
+    <section class="card">
+      <h2 data-i18n="alwaysOnTitle"></h2>
+      <ul class="always-on" id="always-on"></ul>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="shortcutsListTitle"></h2>
+      <div class="shortcut-list" id="shortcuts"></div>
+    </section>
+  </main>
 
   <footer class="footer">
     <p data-i18n="watchPageNote"></p>
+    <nav class="links">
+      <a href="https://github.com/Heyimlulu/Improve-ADN" target="_blank" rel="noopener" data-i18n="viewOnGithub"></a>
+      <a href="https://github.com/Heyimlulu/Improve-ADN/issues" target="_blank" rel="noopener" data-i18n="reportIssue"></a>
+    </nav>
   </footer>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <!-- Templates used by popup.js to render the settings -->
   <template id="tpl-switch">
-    <label class="row row-switch">
+    <label class="row">
       <span class="row-text">
         <span class="row-label"></span>
         <span class="row-desc"></span>
@@ -36,47 +45,6 @@
         <span class="switch-track"></span>
       </span>
     </label>
-  </template>
-
-  <template id="tpl-select">
-    <label class="row row-select">
-      <span class="row-text">
-        <span class="row-label"></span>
-        <span class="row-desc"></span>
-      </span>
-      <select class="select"></select>
-    </label>
-  </template>
-
-  <template id="tpl-number">
-    <label class="row row-number">
-      <span class="row-text">
-        <span class="row-label"></span>
-        <span class="row-desc"></span>
-      </span>
-      <input type="number" class="number">
-    </label>
-  </template>
-
-  <template id="tpl-manage">
-    <section class="card">
-      <h2 data-i18n="manageTitle"></h2>
-      <p class="card-desc" data-i18n="manageDesc"></p>
-      <div class="actions">
-        <button type="button" class="button" id="backup" data-i18n="backup"></button>
-        <button type="button" class="button" id="restore" data-i18n="restore"></button>
-        <button type="button" class="button button-danger" id="reset" data-i18n="reset"></button>
-        <input type="file" id="restore-input" accept="application/json,.json" hidden>
-      </div>
-    </section>
-    <section class="card">
-      <h2 data-i18n="aboutTitle"></h2>
-      <p class="card-desc" id="about-version"></p>
-      <div class="links">
-        <a href="https://github.com/Heyimlulu/Improve-ADN" target="_blank" rel="noopener" data-i18n="viewOnGithub"></a>
-        <a href="https://github.com/Heyimlulu/Improve-ADN/issues" target="_blank" rel="noopener" data-i18n="reportIssue"></a>
-      </div>
-    </section>
   </template>
 
   <script type="module" src="popup.js"></script>

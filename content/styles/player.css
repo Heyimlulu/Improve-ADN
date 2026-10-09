@@ -6,14 +6,15 @@
 /* -------------------------------------------------- Control-bar buttons -- */
 
 .adn-improver-control {
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: none;
     width: 4em;
     height: 100%;
     margin: 0;
-    padding: 0;
+    padding: 0 0.4em;
+    box-sizing: border-box;
     border: 0;
     background: transparent;
     color: inherit;
@@ -114,11 +115,11 @@
 }
 
 .adn-improver-pause-overlay-title {
+    /* Top-left corner: clear of the centred play / skip buttons and of the control bar. */
     position: absolute;
-    top: 50%;
-    left: 6%;
-    max-width: 62%;
-    transform: translateY(-50%);
+    top: 7%;
+    left: 5%;
+    max-width: 52%;
     color: var(--adn-improver-fg);
     font-family: var(--adn-improver-font);
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
@@ -142,7 +143,7 @@
 .adn-improver-pause-overlay-summary {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 3;
     overflow: hidden;
     margin: 1em 0 0;
     max-width: 60ch;
@@ -162,20 +163,16 @@ html[data-adn-pause-overlay] .video-js .vjs-meta-display {
     transition: opacity 0.25s ease;
 }
 
-html[data-adn-gradient="hidden"] [data-adn-player-gradient="layer"],
-html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient="layer"] {
+html[data-adn-controls="hidden"] [data-adn-player-gradient="layer"] {
     opacity: 0 !important;
 }
 
-html[data-adn-gradient="hidden"] [data-adn-player-gradient="background"],
-html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient="background"] {
+html[data-adn-controls="hidden"] [data-adn-player-gradient="background"] {
     background-image: none !important;
 }
 
-html[data-adn-gradient="hidden"] [data-adn-player-gradient-pseudo~="before"]::before,
-html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="before"]::before,
-html[data-adn-gradient="hidden"] [data-adn-player-gradient-pseudo~="after"]::after,
-html[data-adn-gradient="withControls"][data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="after"]::after {
+html[data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="before"]::before,
+html[data-adn-controls="hidden"] [data-adn-player-gradient-pseudo~="after"]::after {
     opacity: 0 !important;
     transition: opacity 0.25s ease;
 }

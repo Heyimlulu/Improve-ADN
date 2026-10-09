@@ -1,13 +1,11 @@
 /**
- * Controls the dark gradient ADN draws at the bottom of the player.
+ * Hides the dark gradient ADN draws at the bottom of the player whenever the
+ * controls are hidden.
  *
  * The gradient layer is not always hidden together with the controls, which
  * leaves a black fade over the picture (very visible in theater mode). This
- * feature finds any gradient-backgrounded element inside the player at runtime
- * and marks it so CSS can hide it:
- *   - `withControls` : hidden whenever the control bar is hidden
- *   - `hidden`       : always hidden
- *   - `native`       : feature off
+ * feature finds any gradient-painted element inside the player at runtime
+ * and marks it so CSS can fade it out with the controls.
  *
  * Marks:
  *   [data-adn-player-gradient="layer"]       pure overlay -> faded out
@@ -29,7 +27,6 @@ const MIN_WIDTH_RATIO = 0.5;
 
 export class PlayerGradient extends Feature {
     static id = 'player-gradient';
-    settingKeys = ['playerGradient'];
 
     #container = null;
     #marked = new Set();
@@ -38,26 +35,12 @@ export class PlayerGradient extends Feature {
     #rescan = rafThrottle(() => this.#scan());
     #refreshControls = rafThrottle(() => this.#updateControlsVisibility());
 
-    isWanted() {
-        return this.ctx.settings.get('playerGradient') !== 'native';
-    }
-
     onEnable() {
-        this.#applyMode();
         this.onEachVideo((video, container, scope) => this.#attach(video, container, scope));
     }
 
     onDisable() {
-        setRootAttribute('data-adn-gradient', null);
         setRootAttribute('data-adn-controls', null);
-    }
-
-    onSettingsChange() {
-        if (this.enabled) this.#applyMode();
-    }
-
-    #applyMode() {
-        setRootAttribute('data-adn-gradient', this.ctx.settings.get('playerGradient'));
     }
 
     #attach(video, container, scope) {

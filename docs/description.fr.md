@@ -9,6 +9,6 @@ ADN Improver améliore le lecteur d'ADN (Animation Digital Network) :
 - Raccourcis clavier façon YouTube (espace, flèches, J/K/L, M, F, T, P, < >, 0 à 9, Maj + N / Maj + P) et aide intégrée avec ?
 - Retour visuel sur chaque action
 - Masquage de la barre de défilement
-- Chaque fonctionnalité est activable / désactivable, sauvegarde et restauration des réglages
+- Quatre réglages seulement : mode théâtre, overlay de pause, raccourcis, barre de défilement
 
 Extension indépendante, non affiliée à ADN.

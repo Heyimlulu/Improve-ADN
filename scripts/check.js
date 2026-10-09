@@ -63,12 +63,11 @@ for (const file of SOURCE_DIRECTORIES.flatMap((directory) => [...listFiles(direc
 }
 
 const schemaModule = await import(pathToFileURL(path.join(ROOT, 'shared/settings-schema.js')));
-for (const section of schemaModule.SECTIONS) usedKeys.add(section.label);
 for (const entry of schemaModule.SETTINGS_SCHEMA) {
     usedKeys.add(entry.label);
-    if (entry.description) usedKeys.add(entry.description);
-    for (const option of entry.options ?? []) usedKeys.add(option.label);
+    usedKeys.add(entry.description);
 }
+for (const key of schemaModule.ALWAYS_ON_FEATURES) usedKeys.add(key);
 const shortcutsModule = await import(pathToFileURL(path.join(ROOT, 'shared/shortcuts.js')));
 for (const shortcut of shortcutsModule.SHORTCUTS) usedKeys.add(shortcut.label);
 

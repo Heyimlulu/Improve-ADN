@@ -9,6 +9,6 @@ ADN Improver enhances the ADN (Animation Digital Network) player:
 - YouTube-like keyboard shortcuts (space, arrows, J/K/L, M, F, T, P, < >, 0 to 9, Shift + N / Shift + P) with a built-in cheat sheet on ?
 - Visual feedback for every action
 - Scrollbar hiding
-- Every feature can be toggled, settings can be exported and restored
+- Only four settings: theater mode, pause overlay, shortcuts, scrollbar
 
 Independent project, not affiliated with ADN.

@@ -4,14 +4,12 @@
 
 :root {
     --accent: #0095ff;
-    --accent-strong: #007ad6;
     --bg: #0b1119;
     --bg-elevated: #121b26;
     --bg-hover: #182433;
     --border: #22303f;
     --text: #f2f6fa;
     --text-muted: #93a3b5;
-    --danger: #ff5c5c;
     --radius: 10px;
     --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color-scheme: dark;
@@ -22,7 +20,7 @@
 }
 
 body {
-    width: 380px;
+    width: 360px;
     margin: 0;
     background: var(--bg);
     color: var(--text);
@@ -31,19 +29,14 @@ body {
 
 h1,
 h2,
-p {
+p,
+ul {
     margin: 0;
 }
 
-button,
-input,
-select {
-    font: inherit;
-    color: inherit;
-}
-
-[hidden] {
-    display: none !important;
+ul {
+    padding: 0;
+    list-style: none;
 }
 
 /* --------------------------------------------------------------- Header -- */
@@ -61,12 +54,6 @@ select {
     border-radius: 7px;
 }
 
-.header-text {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
 .header h1 {
     font-size: 16px;
     font-weight: 700;
@@ -77,48 +64,12 @@ select {
     color: var(--text-muted);
 }
 
-/* ----------------------------------------------------------------- Tabs -- */
-
-.tabs {
-    display: flex;
-    padding: 0 8px;
-    background: var(--bg-elevated);
-    border-bottom: 1px solid var(--border);
-}
-
-.tab {
-    flex: 1;
-    padding: 10px 6px;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: none;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
-}
-
-.tab:hover {
-    color: var(--text);
-}
-
-.tab.is-active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-}
-
-/* -------------------------------------------------------------- Content -- */
+/* ------------------------------------------------------------- Settings -- */
 
 .content {
-    max-height: 480px;
+    max-height: 520px;
     overflow-y: auto;
-    padding: 6px 0;
-}
-
-.panel {
-    display: flex;
-    flex-direction: column;
+    padding: 6px 0 10px;
 }
 
 .row {
@@ -126,25 +77,19 @@ select {
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    padding: 10px 16px;
+    padding: 11px 16px;
     cursor: pointer;
-    transition: background 0.15s, opacity 0.15s;
+    transition: background 0.15s;
 }
 
 .row:hover {
     background: var(--bg-hover);
 }
 
-.row.is-disabled {
-    opacity: 0.45;
-    pointer-events: none;
-}
-
 .row-text {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 0;
 }
 
 .row-label {
@@ -156,7 +101,6 @@ select {
     color: var(--text-muted);
 }
 
-/* Switch */
 .switch {
     position: relative;
     flex: none;
@@ -205,106 +149,38 @@ select {
     outline-offset: 2px;
 }
 
-/* Select & number */
-.select,
-.number {
-    flex: none;
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: var(--bg-elevated);
-    font-size: 13px;
-}
-
-.select {
-    max-width: 180px;
-}
-
-.row-select .row-text {
-    flex: 1 1 auto;
-}
-
-.number {
-    width: 76px;
-    text-align: right;
-}
-
-.select:focus-visible,
-.number:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-}
-
 /* ---------------------------------------------------------------- Cards -- */
 
 .card {
-    margin: 8px 16px;
-    padding: 14px;
+    margin: 10px 16px 0;
+    padding: 12px 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--bg-elevated);
 }
 
 .card h2 {
-    margin-bottom: 6px;
-    font-size: 13px;
+    margin-bottom: 8px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-muted);
 }
 
-.card-desc {
-    margin-bottom: 12px;
+.always-on li {
+    position: relative;
+    padding: 3px 0 3px 18px;
     font-size: 13px;
     color: var(--text-muted);
 }
 
-.actions {
-    display: flex;
-    gap: 8px;
-}
-
-.button {
-    flex: 1;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-hover);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-}
-
-.button:hover {
-    border-color: var(--accent);
-}
-
-.button-danger:hover {
-    border-color: var(--danger);
-    color: var(--danger);
-}
-
-.links {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 13px;
-}
-
-.links a {
+.always-on li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
     color: var(--accent);
-    text-decoration: none;
-}
-
-.links a:hover {
-    text-decoration: underline;
-}
-
-/* Shortcut list */
-.card-shortcuts {
-    margin-top: 10px;
+    font-weight: 700;
 }
 
 .shortcut-list {
@@ -315,7 +191,7 @@ select {
 
 .shortcut-row {
     display: grid;
-    grid-template-columns: 128px 1fr;
+    grid-template-columns: 136px 1fr;
     align-items: center;
     gap: 10px;
     padding: 5px 6px;
@@ -356,25 +232,17 @@ kbd {
     color: var(--text-muted);
 }
 
-/* ---------------------------------------------------------------- Toast -- */
-
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: 14px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0;
-    transform: translate(-50%, 8px);
-    transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none;
+.links {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
 }
 
-.toast.is-visible {
-    opacity: 1;
-    transform: translate(-50%, 0);
+.links a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.links a:hover {
+    text-decoration: underline;
 }
