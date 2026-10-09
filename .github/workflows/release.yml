@@ -1,5 +1,8 @@
 name: Create Release
 
+# Bumps the version, builds the zip, tags, publishes a GitHub release and
+# (optionally) hands the new tag to the "Publish to stores" workflow.
+
 on:
   workflow_dispatch:
     inputs:
@@ -12,10 +15,19 @@ on:
           - minor
           - major
         default: 'patch'
+      publish:
+        description: 'Submit the release to the stores (Chrome, Edge, Firefox)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.versioning.outputs.tag }}
 
     steps:
       - name: Checkout code
@@ -25,9 +37,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint and static checks
+        run: npm test
 
       - name: Bump version
         run: npm run version:${{ github.event.inputs.version_type }}
@@ -48,9 +64,9 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'github-actions@github.com'
           git add package.json manifest.json
-          # Get the new version from package.json and set it as an output
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
           git commit -m "Bump version to v$NEW_VERSION"
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push
@@ -67,3 +83,12 @@ jobs:
           files: ${{ steps.get_artifact.outputs.zip_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to stores
+    needs: build-and-release
+    if: ${{ inputs.publish }}
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ needs.build-and-release.outputs.tag }}
+    secrets: inherit

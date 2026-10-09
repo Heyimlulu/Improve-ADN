@@ -27,7 +27,7 @@ export default [
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
-            globals: { ...globals.node },
+            globals: { ...globals.node, fetch: 'readonly', URLSearchParams: 'readonly' },
         },
     },
     {
