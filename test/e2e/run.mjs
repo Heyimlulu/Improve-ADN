@@ -41,6 +41,11 @@ function check(name, condition, info = '') {
     if (!condition) failures++;
 }
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+process.on('unhandledRejection', (error) => {
+    console.log(results.join('\n'));
+    console.error('\nAborted:', error);
+    process.exit(1);
+});
 
 // ------------------------------------------------------------- Browser --
 
@@ -175,6 +180,18 @@ const barGeometry = await page.evaluate(() => {
     return { fullscreen: rect('.vjs-fullscreen-control'), pip: rect('.adn-improver-pip-button'), rate: rect('.adn-improver-rate-button'), theater: rect('.adn-improver-theater-button') };
 });
 check('injected controls sit on the fullscreen row, right before it', Math.abs(barGeometry.pip.top - barGeometry.fullscreen.top) < 2 && barGeometry.pip.right <= barGeometry.fullscreen.left + 1 && barGeometry.theater.right <= barGeometry.rate.left + 1 && Math.abs(barGeometry.pip.height - barGeometry.fullscreen.height) < 2, JSON.stringify(barGeometry));
+
+// The player may rebuild its control bar: injected controls must come back.
+await page.evaluate(() => {
+    for (const element of document.querySelectorAll('.vjs-control-bar > .adn-improver-control, .vjs-control-bar > .adn-improver-menu')) element.remove();
+});
+await sleep(200);
+check('injected controls are re-inserted after the bar is rebuilt', await page.evaluate(() => {
+    const bar = document.querySelector('.vjs-control-bar');
+    const kids = [...bar.children];
+    return ['.adn-improver-theater-button', '.adn-improver-rate-button', '.adn-improver-pip-button'].every((selector) => bar.querySelector(selector)) && kids.indexOf(bar.querySelector('.vjs-fullscreen-control')) === kids.length - 1;
+}));
+
 
 const gradientBefore = await page.evaluate(() => ({
     pseudoMark: document.querySelector('.adn-video-js').getAttribute('data-adn-player-gradient-pseudo'),
