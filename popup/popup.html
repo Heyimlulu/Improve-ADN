@@ -7,45 +7,36 @@
 </head>
 <body>
   <header class="header">
-    <img class="header-logo" src="../icons/icon-64x64.png" alt="" width="28" height="28">
+    <img class="header-logo" src="../icons/icon-64x64.png" alt="" width="26" height="26">
     <h1 data-i18n="extName">ADN Improver</h1>
     <span class="header-version" id="version"></span>
   </header>
 
   <main class="content">
-    <section class="settings" id="settings"></section>
-
-    <section class="card">
-      <h2 data-i18n="alwaysOnTitle"></h2>
-      <ul class="always-on" id="always-on"></ul>
+    <!-- Home: one tile per switch, plus two information tiles -->
+    <section class="view is-active" id="view-home">
+      <div class="tiles" id="tiles"></div>
+      <p class="note" data-i18n="watchPageNote"></p>
     </section>
 
-    <section class="card">
-      <h2 data-i18n="shortcutsListTitle"></h2>
+    <!-- Keyboard shortcuts -->
+    <section class="view" id="view-shortcuts">
+      <div class="view-header">
+        <button type="button" class="back" data-back data-i18n-attr="aria-label:back,title:back"></button>
+        <h2 data-i18n="shortcutsListTitle"></h2>
+      </div>
       <div class="shortcut-list" id="shortcuts"></div>
     </section>
+
+    <!-- Always-on features -->
+    <section class="view" id="view-included">
+      <div class="view-header">
+        <button type="button" class="back" data-back data-i18n-attr="aria-label:back,title:back"></button>
+        <h2 data-i18n="alwaysOnTitle"></h2>
+      </div>
+      <ul class="always-on" id="always-on"></ul>
+    </section>
   </main>
-
-  <footer class="footer">
-    <p data-i18n="watchPageNote"></p>
-    <nav class="links">
-      <a href="https://github.com/Heyimlulu/Improve-ADN" target="_blank" rel="noopener" data-i18n="viewOnGithub"></a>
-      <a href="https://github.com/Heyimlulu/Improve-ADN/issues" target="_blank" rel="noopener" data-i18n="reportIssue"></a>
-    </nav>
-  </footer>
-
-  <template id="tpl-switch">
-    <label class="row">
-      <span class="row-text">
-        <span class="row-label"></span>
-        <span class="row-desc"></span>
-      </span>
-      <span class="switch">
-        <input type="checkbox">
-        <span class="switch-track"></span>
-      </span>
-    </label>
-  </template>
 
   <script type="module" src="popup.js"></script>
 </body>

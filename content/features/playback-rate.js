@@ -7,7 +7,7 @@
 import { Feature } from '../core/feature.js';
 import { createControlButton, insertIntoControlBar } from '../core/controlbar.js';
 import { createElement, createSvgIcon } from '../core/dom.js';
-import { ICONS } from '../core/icons.js';
+import { ICONS } from '../../shared/icons.js';
 import { PLAYER_SELECTORS } from '../core/player.js';
 import { PLAYBACK_RATES, formatRate } from '../core/actions.js';
 import { t } from '../../shared/i18n.js';

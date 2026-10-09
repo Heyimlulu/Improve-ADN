@@ -48,10 +48,9 @@
   "shortcutSeekPercent": { "message": "Jump to 0%, 10%… 90% of the video" },
   "shortcutEpisodes": { "message": "Next / previous episode" },
   "shortcutHelp": { "message": "Show this help" },
-  "shortcutsListTitle": { "message": "Shortcuts" },
+  "shortcutsListTitle": { "message": "Key list" },
 
   "version": { "message": "Version $1", "placeholders": { "version": { "content": "$1" } } },
-  "viewOnGithub": { "message": "Source code" },
-  "reportIssue": { "message": "Report an issue" },
+  "back": { "message": "Back" },
   "watchPageNote": { "message": "Active on ADN watch pages. Changes apply immediately." }
 }

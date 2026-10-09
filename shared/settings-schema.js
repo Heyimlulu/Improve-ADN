@@ -14,29 +14,34 @@
  *  - default     : value used when nothing is stored / value is invalid
  *  - label       : i18n message key for the title
  *  - description : i18n message key for the helper text
+ *  - icon        : key of `shared/icons.js` used by the popup tile
  */
 
 export const SETTINGS_SCHEMA = [
     {
         key: 'theaterMode',
+        icon: 'theater',
         default: true,
         label: 'settingTheaterMode',
         description: 'settingTheaterModeDesc',
     },
     {
         key: 'pauseOverlay',
+        icon: 'pauseCircle',
         default: true,
         label: 'settingPauseOverlay',
         description: 'settingPauseOverlayDesc',
     },
     {
         key: 'shortcuts',
+        icon: 'keyboard',
         default: true,
         label: 'settingShortcuts',
         description: 'settingShortcutsDesc',
     },
     {
         key: 'hideScrollbar',
+        icon: 'scrollbar',
         default: false,
         label: 'settingHideScrollbar',
         description: 'settingHideScrollbarDesc',

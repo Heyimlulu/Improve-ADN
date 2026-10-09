@@ -4,7 +4,7 @@
  */
 
 import { clamp, createSvgIcon, formatTime } from './dom.js';
-import { ICONS } from './icons.js';
+import { ICONS } from '../../shared/icons.js';
 import { t } from '../../shared/i18n.js';
 import { logger } from './logger.js';
 import { findNextEpisodeControl, findPreviousEpisodeControl } from './episode.js';

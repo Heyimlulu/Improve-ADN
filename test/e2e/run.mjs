@@ -55,6 +55,7 @@ const context = await chromium.launchPersistentContext(userDataDir, {
 const STATIC = {
     '/sample.webm': { file: SAMPLE, type: 'video/webm', media: true },
     '/fixture.css': { file: path.join(FIXTURES, 'fixture.css'), type: 'text/css' },
+    '/adn.css': { file: path.join(FIXTURES, 'adn.css'), type: 'text/css' },
     '/fixture.js': { file: path.join(FIXTURES, 'fixture.js'), type: 'application/javascript' },
 };
 await context.route('**/*', async (route) => {
@@ -137,6 +138,10 @@ await page.mouse.move(800, 400);
 await sleep(400);
 check('header hidden again', (await html.getAttribute('data-adn-header')) === 'hidden');
 
+// ------------------------------------------------------ Gradient handling --
+
+await page.evaluate(() => document.querySelector('video').play());
+await sleep(500);
 // ---------------------------------------------------- Control-bar buttons --
 
 const controls = await page.evaluate(() => {
@@ -164,31 +169,31 @@ check('theater button injected and active', controls.theater && controls.theater
 check('rate menu injected with 7 items', controls.rate === '1×' && controls.rateItems === 7, `${controls.rate} / ${controls.rateItems}`);
 check('pip button injected when supported', controls.pip === controls.pipEnabled, `pipEnabled=${controls.pipEnabled}`);
 check('buttons inserted before fullscreen', controls.fullscreenLast);
-check('injected controls are visible and aligned with the fullscreen button', controls.allVisible && controls.inlineOrder === '0', `order=${controls.inlineOrder}`);
+check('injected controls are visible and share the fullscreen button flex order', controls.allVisible && controls.inlineOrder === '2', `order=${controls.inlineOrder}`);
+const barGeometry = await page.evaluate(() => {
+    const rect = (selector) => document.querySelector(selector).getBoundingClientRect().toJSON();
+    return { fullscreen: rect('.vjs-fullscreen-control'), pip: rect('.adn-improver-pip-button'), rate: rect('.adn-improver-rate-button'), theater: rect('.adn-improver-theater-button') };
+});
+check('injected controls sit on the fullscreen row, right before it', Math.abs(barGeometry.pip.top - barGeometry.fullscreen.top) < 2 && barGeometry.pip.right <= barGeometry.fullscreen.left + 1 && barGeometry.theater.right <= barGeometry.rate.left + 1 && Math.abs(barGeometry.pip.height - barGeometry.fullscreen.height) < 2, JSON.stringify(barGeometry));
 
-// ------------------------------------------------------ Gradient handling --
-
-await page.evaluate(() => document.querySelector('video').play());
-await sleep(500);
 const gradientBefore = await page.evaluate(() => ({
     pseudoMark: document.querySelector('.adn-video-js').getAttribute('data-adn-player-gradient-pseudo'),
-    barMark: document.querySelector('.vjs-control-bar').getAttribute('data-adn-player-gradient'),
-    pseudoOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::after').opacity,
-    barBackground: getComputedStyle(document.querySelector('.vjs-control-bar')).backgroundImage,
+    afterOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::after').opacity,
+    beforeOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::before').opacity,
     controls: document.documentElement.getAttribute('data-adn-controls'),
     playing: document.documentElement.getAttribute('data-adn-playing'),
 }));
-check('pseudo-element gradient tagged', gradientBefore.pseudoMark === 'after', gradientBefore.pseudoMark);
-check('control bar gradient tagged as background', gradientBefore.barMark === 'background', gradientBefore.barMark);
-check('gradients visible while controls visible', gradientBefore.pseudoOpacity === '1' && gradientBefore.barBackground.includes('gradient') && gradientBefore.controls === 'visible', JSON.stringify(gradientBefore));
+check('both gradient pseudo-elements tagged', gradientBefore.pseudoMark === 'before after', gradientBefore.pseudoMark);
+check('gradients visible while controls visible', Number(gradientBefore.afterOpacity) > 0.5 && Number(gradientBefore.beforeOpacity) > 0.5 && gradientBefore.controls === 'visible', JSON.stringify(gradientBefore));
 check('playing attribute mirrors video', gradientBefore.playing === 'true');
 await sleep(1800); // fixture player goes user-inactive after 1.5 s
 const gradientAfter = await page.evaluate(() => ({
-    pseudoOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::after').opacity,
-    barBackground: getComputedStyle(document.querySelector('.vjs-control-bar')).backgroundImage,
+    afterOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::after').opacity,
+    beforeOpacity: getComputedStyle(document.querySelector('.adn-video-js'), '::before').opacity,
     controls: document.documentElement.getAttribute('data-adn-controls'),
 }));
-check('gradients hidden once controls hide', gradientAfter.controls === 'hidden' && gradientAfter.pseudoOpacity === '0' && gradientAfter.barBackground === 'none', JSON.stringify(gradientAfter));
+check('gradients hidden once controls hide', gradientAfter.controls === 'hidden' && Number(gradientAfter.afterOpacity) < 0.05 && Number(gradientAfter.beforeOpacity) < 0.05, JSON.stringify(gradientAfter));
+await page.screenshot({ path: path.join(SHOTS, 'theater-playing.png') });
 
 // -------------------------------------------------------------- Shortcuts --
 
@@ -309,35 +314,43 @@ if (extensionId) {
     await popup.goto(`chrome-extension://${extensionId}/popup/popup.html`);
     await sleep(500);
     const popupState = await popup.evaluate(() => ({
-        rows: document.querySelectorAll('.row').length,
+        switches: document.querySelectorAll('.tile-switch').length,
+        infoTiles: document.querySelectorAll('.tile-info').length,
         alwaysOn: document.querySelectorAll('.always-on li').length,
         shortcuts: document.querySelectorAll('.shortcut-row').length,
-        labelsFilled: [...document.querySelectorAll('.row-label, .always-on li, .shortcut-label')].every((element) => element.textContent.trim().length > 0),
-        theaterChecked: document.getElementById('setting-theaterMode').checked,
+        labelsFilled: [...document.querySelectorAll('.tile-label, .always-on li, .shortcut-label')].every((element) => element.textContent.trim().length > 0),
+        theaterChecked: document.querySelector('[data-key="theaterMode"]').getAttribute('aria-checked') === 'true',
         version: document.getElementById('version').textContent,
+        noLinks: document.querySelectorAll('a[href]').length === 0,
     }));
-    check('popup renders the four switches', popupState.rows === SETTINGS_COUNT, String(popupState.rows));
-    check('popup lists always-on features and shortcuts', popupState.alwaysOn === ALWAYS_ON_COUNT && popupState.shortcuts === SHORTCUTS_COUNT && popupState.labelsFilled, `${popupState.alwaysOn} / ${popupState.shortcuts}`);
+    check('popup renders four switch tiles and two info tiles', popupState.switches === SETTINGS_COUNT && popupState.infoTiles === 2, `${popupState.switches} / ${popupState.infoTiles}`);
+    check('popup lists always-on features and shortcuts, without external links', popupState.alwaysOn === ALWAYS_ON_COUNT && popupState.shortcuts === SHORTCUTS_COUNT && popupState.labelsFilled && popupState.noLinks, `${popupState.alwaysOn} / ${popupState.shortcuts}`);
     check('popup shows version', popupState.version === `v${EXTENSION_VERSION}`, `${popupState.version} vs manifest ${EXTENSION_VERSION}`);
     check('popup theater toggle reflects storage', popupState.theaterChecked === true);
     await popup.screenshot({ path: path.join(SHOTS, 'popup.png') });
 
-    await popup.click('[data-key="theaterMode"] .switch-track');
+    await popup.click('[data-key="theaterMode"]');
     await sleep(600);
     check('popup toggle propagates to the page', (await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater'))) === null);
-    await popup.click('[data-key="theaterMode"] .switch-track');
+    await popup.click('[data-key="theaterMode"]');
     await sleep(600);
     check('popup toggle back re-enables', (await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater'))) === 'on');
 
-    await popup.click('[data-key="shortcuts"] .switch-track');
+    await popup.click('[data-key="shortcuts"]');
     await sleep(400);
     await page.bringToFront();
     const tA = await currentTime();
     await page.keyboard.press('ArrowRight');
     await sleep(150);
     check('shortcuts switch disables the keyboard handling', Math.abs((await currentTime()) - tA) < 0.5);
-    await popup.click('[data-key="shortcuts"] .switch-track');
+    await popup.click('[data-key="shortcuts"]');
     await sleep(400);
+    await popup.click('.tile-info');
+    await sleep(200);
+    check('shortcuts panel opens from its tile', await popup.evaluate(() => document.getElementById('view-shortcuts').classList.contains('is-active')));
+    await popup.screenshot({ path: path.join(SHOTS, 'popup-shortcuts.png') });
+    await popup.click('#view-shortcuts [data-back]');
+    check('back button returns home', await popup.evaluate(() => document.getElementById('view-home').classList.contains('is-active')));
     check('popup has no errors', popupErrors.length === 0, popupErrors.join(' | '));
 }
 

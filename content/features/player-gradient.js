@@ -34,6 +34,11 @@ export class PlayerGradient extends Feature {
     #controlsObserver = null;
     #rescan = rafThrottle(() => this.#scan());
     #refreshControls = rafThrottle(() => this.#updateControlsVisibility());
+    // Class changes (e.g. vjs-player-started) can add or remove gradient pseudo-elements.
+    #onAttributes = () => {
+        this.#rescan();
+        this.#refreshControls();
+    };
 
     onEnable() {
         this.onEachVideo((video, container, scope) => this.#attach(video, container, scope));
@@ -50,7 +55,7 @@ export class PlayerGradient extends Feature {
         this.#mutationObserver = new MutationObserver(this.#rescan);
         this.#mutationObserver.observe(container, { childList: true, subtree: true });
 
-        this.#controlsObserver = new MutationObserver(this.#refreshControls);
+        this.#controlsObserver = new MutationObserver(this.#onAttributes);
         this.#controlsObserver.observe(container, {
             attributes: true,
             attributeFilter: ['class', 'style'],
