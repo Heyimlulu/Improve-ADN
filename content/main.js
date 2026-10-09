@@ -58,7 +58,7 @@ export async function bootstrap() {
 
     const router = new Router();
     const player = new PlayerWatcher();
-    const osd = new Osd(() => settings.get('osd'));
+    const osd = new Osd();
 
     /** @type {AppContext} */
     const ctx = { settings, router, player, osd, actions: null };

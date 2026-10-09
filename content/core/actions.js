@@ -10,7 +10,6 @@ import { logger } from './logger.js';
 import { findNextEpisodeControl, findPreviousEpisodeControl } from './episode.js';
 
 export const PLAYBACK_RATES = Object.freeze([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]);
-export const PLAYBACK_RATE_STEP = 0.25;
 export const MIN_PLAYBACK_RATE = 0.25;
 export const MAX_PLAYBACK_RATE = 3;
 

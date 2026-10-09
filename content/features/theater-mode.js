@@ -2,10 +2,10 @@
  * Theater mode.
  *
  * Goal: the player fills the viewport (width and height) while the rest of
- * the page (episode list, summary, comments...) stays reachable by scrolling,
- * exactly like Crunchyroll's theater mode. The header is taken out of the flow
- * and slides back in when the mouse reaches the top of the window or when the
- * user scrolls past the player.
+ * the page (title, episode list, comments, sidebar) stays reachable by
+ * scrolling, exactly like Crunchyroll's theater mode. The header is taken out
+ * of the flow and slides back in when the mouse reaches the top of the window
+ * or when the user scrolls past the player.
  *
  * ADN's markup uses hashed class names, so the layout is discovered at runtime:
  *
@@ -20,9 +20,9 @@
  *                   sits at the very top without touching the DOM order.
  *   4. `chain`    : every ancestor of `wrapper` up to <body>; they must not clip
  *                   the stretched wrapper (`overflow: visible`).
- *   5. `row`      : the first ancestor that lays out something *next to* the
- *                   player (e.g. a sidebar). It is switched to a vertical flow so
- *                   the sidebar moves under the player.
+ *   5. `aside`    : elements laid out *next to* the player (the 320 px sidebar).
+ *                   They keep their column but are pushed down under the
+ *                   player, so the two-column layout survives below the stage.
  *
  * Marks are `data-adn-theater-*` attributes; all visual rules live in
  * `styles/theater.css` under `html[data-adn-theater]`.
@@ -34,26 +34,26 @@ import { queryFirst, rafThrottle, setRootAttribute } from '../core/dom.js';
 const MARKS = Object.freeze({
     WRAPPER: 'data-adn-theater-wrapper',
     INNER: 'data-adn-theater-inner',
-    CHAIN: 'data-adn-theater-chain',
     STAGE: 'data-adn-theater-stage',
-    ROW: 'data-adn-theater-row',
-    COLUMN: 'data-adn-theater-column',
+    CHAIN: 'data-adn-theater-chain',
     ASIDE: 'data-adn-theater-aside',
     HEADER: 'data-adn-theater-header',
 });
 
 const HEADER_SELECTORS = ['header[data-testid="menuContent"]', 'body > header', 'header', '[data-testid*="header" i]', 'body > nav'];
 const HEADER_HOVER_ZONE_PX = 64;
+const ASIDE_GAP_PX = 16;
 const RELAYOUT_DELAYS_MS = [0, 600, 2500];
 const IGNORED_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT']);
 const WIDTH_TOLERANCE_PX = 8;
 
 export class TheaterMode extends Feature {
     static id = 'theater-mode';
-    settingKeys = ['theaterMode', 'theaterSize', 'theaterHeaderOnHover'];
+    settingKeys = ['theaterMode'];
 
     #marked = new Set();
     #wrapper = null;
+    #asides = [];
     #header = null;
     #relayoutTimers = [];
     #mouseNearTop = false;
@@ -79,7 +79,8 @@ export class TheaterMode extends Feature {
     });
 
     onEnable() {
-        this.#applyRootAttributes();
+        setRootAttribute('data-adn-theater', 'on');
+        this.#updateHeaderVisibility();
         this.#markHeader();
 
         this.onEachVideo((_video, container, scope) => {
@@ -100,24 +101,12 @@ export class TheaterMode extends Feature {
         this.#header?.removeAttribute(MARKS.HEADER);
         this.#header = null;
         setRootAttribute('data-adn-theater', null);
-        setRootAttribute('data-adn-header-hover', null);
         setRootAttribute('data-adn-header', null);
         setRootAttribute('data-adn-measuring', null);
         document.documentElement.style.removeProperty('--adn-vw');
     }
 
-    onSettingsChange() {
-        if (this.enabled) this.#applyRootAttributes();
-    }
-
     // ----------------------------------------------------------- Layout --
-
-    #applyRootAttributes() {
-        const { settings } = this.ctx;
-        setRootAttribute('data-adn-theater', settings.get('theaterSize'));
-        setRootAttribute('data-adn-header-hover', settings.get('theaterHeaderOnHover'));
-        this.#updateHeaderVisibility();
-    }
 
     #markHeader() {
         const header = queryFirst(HEADER_SELECTORS);
@@ -149,7 +138,6 @@ export class TheaterMode extends Feature {
         // layout. Transitions are suspended meanwhile (see theater.css) so the
         // forced style recalculation does not animate anything.
         const root = document.documentElement;
-        const theaterValue = root.getAttribute('data-adn-theater');
         root.setAttribute('data-adn-measuring', '');
         root.removeAttribute('data-adn-theater');
 
@@ -170,23 +158,17 @@ export class TheaterMode extends Feature {
             }
 
             const wrapperRect = wrapper.getBoundingClientRect();
-            let rowFound = false;
             let child = wrapper;
             for (let parent = wrapper.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
                 this.#mark(parent, MARKS.CHAIN);
-                if (!rowFound) {
-                    const asides = this.#findAsides(parent, child, wrapperRect);
-                    if (asides.length > 0) {
-                        rowFound = true;
-                        this.#mark(parent, MARKS.ROW);
-                        this.#mark(child, MARKS.COLUMN);
-                        for (const aside of asides) this.#mark(aside, MARKS.ASIDE);
-                    }
+                if (this.#asides.length === 0) {
+                    this.#asides = this.#findAsides(parent, child, wrapperRect);
+                    for (const aside of this.#asides) this.#mark(aside, MARKS.ASIDE);
                 }
                 child = parent;
             }
         } finally {
-            if (theaterValue !== null) root.setAttribute('data-adn-theater', theaterValue);
+            root.setAttribute('data-adn-theater', 'on');
             requestAnimationFrame(() => root.removeAttribute('data-adn-measuring'));
         }
 
@@ -253,16 +235,19 @@ export class TheaterMode extends Feature {
                 if (attribute !== MARKS.HEADER) element.removeAttribute(attribute);
             }
             element.style.removeProperty('--adn-theater-shift');
+            element.style.removeProperty('--adn-theater-aside-offset');
         }
         this.#marked.clear();
         this.#wrapper = null;
+        this.#asides = [];
         this.#scrolledPastPlayer = false;
         this.#updateHeaderVisibility();
     }
 
     /**
-     * Feed the CSS with the real viewport width (excluding the scrollbar) and
-     * the horizontal shift needed for the wrapper to start at x = 0.
+     * Feed the CSS with the real viewport width (excluding the scrollbar), the
+     * horizontal shift needed for the wrapper to start at x = 0 and the offset
+     * that pushes the sidebar(s) under the player.
      */
     #measure() {
         if (!this.enabled) return;
@@ -270,18 +255,29 @@ export class TheaterMode extends Feature {
 
         const wrapper = this.#wrapper;
         if (!wrapper?.isConnected) return;
-        const currentShift = parseFloat(wrapper.style.getPropertyValue('--adn-theater-shift')) || 0;
+        const currentShift = readPx(wrapper, '--adn-theater-shift');
         const left = wrapper.getBoundingClientRect().left;
-        const shift = Math.round(currentShift - left);
-        wrapper.style.setProperty('--adn-theater-shift', `${shift}px`);
+        wrapper.style.setProperty('--adn-theater-shift', `${Math.round(currentShift - left)}px`);
+
+        const wrapperBottom = wrapper.getBoundingClientRect().bottom;
+        for (const aside of this.#asides) {
+            if (!aside.isConnected) continue;
+            const currentOffset = readPx(aside, '--adn-theater-aside-offset');
+            const naturalTop = aside.getBoundingClientRect().top - currentOffset;
+            const offset = Math.max(0, Math.round(wrapperBottom - naturalTop + ASIDE_GAP_PX));
+            aside.style.setProperty('--adn-theater-aside-offset', `${offset}px`);
+        }
     }
 
     // ----------------------------------------------------------- Header --
 
     #updateHeaderVisibility() {
         if (!this.enabled) return;
-        const hoverAllowed = this.ctx.settings.get('theaterHeaderOnHover');
-        const visible = this.#scrolledPastPlayer || (hoverAllowed && this.#mouseNearTop);
+        const visible = this.#scrolledPastPlayer || this.#mouseNearTop;
         setRootAttribute('data-adn-header', visible ? 'visible' : 'hidden');
     }
+}
+
+function readPx(element, property) {
+    return parseFloat(element.style.getPropertyValue(property)) || 0;
 }

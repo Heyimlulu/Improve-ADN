@@ -12,21 +12,13 @@ const DURATION_MS = 900;
 export class Osd {
     #element = null;
     #timer = null;
-    #isEnabled;
-
-    /**
-     * @param {() => boolean} isEnabled read the user preference lazily
-     */
-    constructor(isEnabled = () => true) {
-        this.#isEnabled = isEnabled;
-    }
 
     /**
      * Show `text` inside `container` (the `.video-js` element). An optional
      * `icon` (SVG element) is displayed before the text.
      */
     show(container, text, icon = null) {
-        if (!this.#isEnabled() || !container) return;
+        if (!container) return;
 
         if (!this.#element || this.#element.parentElement !== container) {
             this.#element?.remove();

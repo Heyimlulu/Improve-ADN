@@ -6,35 +6,32 @@ Browser extension that improves the [ADN (Animation Digital Network)](https://an
 
 ## Features
 
-Every feature can be switched on or off from the popup. Changes apply instantly on open tabs.
+Four switches in the popup, everything else is always on.
 
-| Feature | Details |
+| Switch | Details |
 | --- | --- |
-| **Theater mode** | The player fills the window (or fits the width in 16:9). The rest of the page (episodes, summary, comments) stays reachable by scrolling. The header hides and slides back when the mouse reaches the top or once you scroll past the player. |
-| **Theater button** | Toggle button in the player bar, next to fullscreen. |
-| **Dark gradient control** | Hide the bottom black fade together with the controls, or always. Fixes the gradient that stayed over the picture in the previous theater mode. |
-| **Pause overlay** | Dims the picture and shows show + episode title while paused. |
-| **Playback speed** | Speed menu in the player bar (0.5× to 2×), `<` / `>` shortcuts, optional memory of the last speed. |
-| **Picture-in-Picture** | Button in the player bar and `P` shortcut (subtitles are not rendered in the PiP window). |
-| **Keyboard shortcuts** | YouTube-like controls, configurable seek and volume steps, `?` opens an in-player cheat sheet. |
-| **Visual feedback** | Small on-screen badge confirming every action. |
-| **Hide scrollbar** | Cleaner watch pages. |
+| **Theater mode** (default on) | The player fills the window. The page keeps its two-column layout below the player: title, episodes and comments on the left, ADN's sidebar on the right. The header hides and slides back when the mouse reaches the top or once you scroll past the player. `T` toggles it. |
+| **Pause overlay** (default on) | Dims the picture and shows the show, the episode title and the synopsis while paused, replacing ADN's own in-player title block. |
+| **Keyboard shortcuts** (default on) | YouTube-like controls, `?` opens an in-player cheat sheet. |
+| **Hide scrollbar** (default off) | Cleaner watch pages. |
+
+Always on: theater button, playback speed menu (0.5× to 2×, last speed remembered), Picture-in-Picture button, bottom gradient hidden together with the controls, on-screen feedback for every action.
 
 ### Keyboard shortcuts
 
 | Keys | Action |
 | --- | --- |
 | `Space`, `K` | Play / pause |
-| `←` / `→` | Seek ±5 s (configurable) |
-| `J` / `L`, `Shift + ←` / `→` | Seek ±10 s (configurable) |
-| `↑` / `↓` | Volume ±5 % (configurable) |
+| `←` / `→` | Seek ±5 s |
+| `J` / `L`, `Shift + ←` / `→` | Seek ±10 s |
+| `↑` / `↓` | Volume ±5 % |
 | `M` | Mute |
 | `F` | Fullscreen |
 | `T` | Theater mode |
 | `P` | Picture-in-Picture |
 | `<` / `>` | Playback speed −/+ 0.25× |
 | `0` … `9`, `Home`, `End` | Jump to a position |
-| `Shift + N` / `Shift + P` | Next / previous episode (best effort, uses the page's own links) |
+| `Shift + N` / `Shift + P` | Next / previous episode (the player's own buttons) |
 | `?` | Show the shortcuts help |
 
 Shortcuts follow your keyboard layout (AZERTY or QWERTY) and are ignored while typing in a field.
@@ -86,7 +83,7 @@ content/
   core/                  router (SPA), player watcher, actions, OSD, DOM helpers…
   features/              one file per feature, all extend core/feature.js
   styles/                base.css, player.css, theater.css
-popup/                   settings UI rendered from the schema
+popup/                   settings UI (4 switches) rendered from the schema
 scripts/                 build, version bump, static checks
 test/e2e/                Playwright smoke test + real ADN watch page fixture
 ```
@@ -97,12 +94,13 @@ test/e2e/                Playwright smoke test + real ADN watch page fixture
 - `Router` polls the URL (Next.js navigation cannot be hooked from an isolated world) and classifies pages: a watch page matches `/video/<show>/<episode-id>`.
 - `PlayerWatcher` finds the `<video>` / `.video-js` / `.vjs-control-bar` elements and notifies features whenever the player is replaced.
 - Features read settings through `SettingsStore` and expose their state as `data-adn-*` attributes on `<html>`; the CSS does the rest. ADN's hashed class names (`sc-xxxx`) are never used: the theater layout is discovered at runtime from the DOM geometry.
+- Controls injected into the control bar copy the computed geometry of ADN's fullscreen button and pin the properties a stylesheet could use to hide them (inline `!important`), so the skin cannot swallow them.
 
 ### Adding a feature
 
 1. Create `content/features/my-feature.js` extending `Feature` (implement `onEnable` / `onDisable`, declare `settingKeys`).
 2. Register it in `FEATURES` in `content/main.js`.
-3. Add its settings to `shared/settings-schema.js` and the labels to both locale files.
+3. If it needs a switch, add it to `shared/settings-schema.js` and the labels to both locale files; otherwise leave `settingKeys` empty and it is always on.
 4. Add styles in `content/styles/`.
 5. Run `npm test`.
 

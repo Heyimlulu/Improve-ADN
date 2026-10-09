@@ -1,12 +1,13 @@
 /**
- * Playback speed:
- *  - a speed menu in the control bar (unless the player already has one)
- *  - optional memory of the last speed across episodes
+ * Playback speed: a speed menu in the control bar (unless the player already
+ * has one) and memory of the last speed across episodes. When a remembered
+ * speed other than 1× is applied, the OSD says so.
  */
 
 import { Feature } from '../core/feature.js';
 import { createControlButton, insertIntoControlBar } from '../core/controlbar.js';
-import { createElement } from '../core/dom.js';
+import { createElement, createSvgIcon } from '../core/dom.js';
+import { ICONS } from '../core/icons.js';
 import { PLAYER_SELECTORS } from '../core/player.js';
 import { PLAYBACK_RATES, formatRate } from '../core/actions.js';
 import { t } from '../../shared/i18n.js';
@@ -16,41 +17,28 @@ const LAST_RATE_KEY = 'lastPlaybackRate';
 
 export class PlaybackRate extends Feature {
     static id = 'playback-rate';
-    settingKeys = ['playbackRateMenu', 'rememberPlaybackRate'];
 
     #menu = null;
     #label = null;
     #items = new Map();
     #rememberedRate = null;
 
-    isWanted() {
-        const { settings } = this.ctx;
-        return settings.get('playbackRateMenu') || settings.get('rememberPlaybackRate');
-    }
-
     onEnable() {
         this.#loadRememberedRate();
 
-        this.onEachVideo((video, _container, scope) => {
+        this.onEachVideo((video, container, scope) => {
             scope.listen(video, 'ratechange', () => this.#onRateChange(video));
-            scope.listen(video, 'loadedmetadata', () => this.#applyRememberedRate(video));
-            this.#applyRememberedRate(video);
+            scope.listen(video, 'loadedmetadata', () => this.#applyRememberedRate(video, container));
+            this.#applyRememberedRate(video, container);
             this.#refresh(video.playbackRate);
         });
 
         this.onEachControlBar((controlBar, _container, scope) => this.#mountMenu(controlBar, scope));
     }
 
-    onSettingsChange(changes) {
-        // Showing / hiding the menu is simplest as a restart: disable() here,
-        // the base class re-evaluates (and re-enables) right after.
-        if ('playbackRateMenu' in changes) this.disable();
-    }
-
     // ------------------------------------------------------------- Menu --
 
     #mountMenu(controlBar, scope) {
-        if (!this.ctx.settings.get('playbackRateMenu')) return;
         if (controlBar.querySelector(PLAYER_SELECTORS.PLAYBACK_RATE_BUTTON)) {
             logger.debug('Player already has a playback rate control, skipping ours');
             return;
@@ -111,7 +99,6 @@ export class PlaybackRate extends Feature {
 
     #onRateChange(video) {
         this.#refresh(video.playbackRate);
-        if (!this.ctx.settings.get('rememberPlaybackRate')) return;
         this.#rememberedRate = video.playbackRate;
         chrome.storage.local.set({ [LAST_RATE_KEY]: video.playbackRate }).catch((error) => {
             logger.warn('Unable to remember playback rate', error);
@@ -123,18 +110,19 @@ export class PlaybackRate extends Feature {
             const stored = await chrome.storage.local.get(LAST_RATE_KEY);
             const rate = Number(stored[LAST_RATE_KEY]);
             this.#rememberedRate = Number.isFinite(rate) && rate > 0 ? rate : null;
-            const video = this.ctx.player.video;
-            if (video) this.#applyRememberedRate(video);
+            const { video, container } = this.ctx.player;
+            if (video) this.#applyRememberedRate(video, container);
         } catch (error) {
             logger.warn('Unable to read remembered playback rate', error);
         }
     }
 
-    #applyRememberedRate(video) {
-        if (!this.ctx.settings.get('rememberPlaybackRate')) return;
+    #applyRememberedRate(video, container) {
         const rate = this.#rememberedRate;
-        if (rate && Math.abs(video.playbackRate - rate) > 0.001) {
-            video.playbackRate = rate;
+        if (!rate || Math.abs(video.playbackRate - rate) < 0.001) return;
+        video.playbackRate = rate;
+        if (Math.abs(rate - 1) > 0.001) {
+            this.ctx.osd.show(container, formatRate(rate), createSvgIcon(ICONS.speed));
         }
     }
 }

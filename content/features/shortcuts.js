@@ -9,8 +9,7 @@
 import { Feature } from '../core/feature.js';
 import { createElement, createSvgIcon, isTypingTarget } from '../core/dom.js';
 import { ICONS } from '../core/icons.js';
-import { PLAYBACK_RATE_STEP } from '../core/actions.js';
-import { SHORTCUTS } from '../../shared/shortcuts.js';
+import { PLAYBACK_RATE_STEP, SEEK_STEP, SEEK_STEP_LARGE, SHORTCUTS, VOLUME_STEP } from '../../shared/shortcuts.js';
 import { t } from '../../shared/i18n.js';
 
 /** Keys that toggle something: ignore auto-repeat for them. */
@@ -18,7 +17,7 @@ const NON_REPEATABLE_KEYS = new Set([' ', 'k', 'm', 'f', 't', 'p', 'n', '?', 'Es
 
 export class Shortcuts extends Feature {
     static id = 'shortcuts';
-    settingKeys = ['shortcuts', 'seekStep', 'seekStepLarge', 'volumeStep'];
+    settingKeys = ['shortcuts'];
 
     #help = null;
 
@@ -47,11 +46,11 @@ export class Shortcuts extends Feature {
 
     /** @returns {boolean} true when the key was handled */
     #handle(key, event) {
-        const { actions, settings } = this.ctx;
+        const { actions } = this.ctx;
         const shift = event.shiftKey;
-        const seekStep = settings.get('seekStep');
-        const seekStepLarge = settings.get('seekStepLarge');
-        const volumeStep = settings.get('volumeStep') / 100;
+        const seekStep = SEEK_STEP;
+        const seekStepLarge = SEEK_STEP_LARGE;
+        const volumeStep = VOLUME_STEP;
 
         switch (key) {
             case ' ':
@@ -140,10 +139,9 @@ export class Shortcuts extends Feature {
             const keys = shortcut.keys.map((key) =>
                 createElement('kbd', { text: key === 'Space' ? t('keySpace') : key }),
             );
-            const substitutions = shortcut.param ? [String(this.ctx.settings.get(shortcut.param))] : undefined;
             return createElement('div', { class: 'adn-improver-help-row' }, [
                 createElement('div', { class: 'adn-improver-help-keys' }, keys),
-                createElement('div', { class: 'adn-improver-help-label', text: t(shortcut.label, substitutions) }),
+                createElement('div', { class: 'adn-improver-help-label', text: t(shortcut.label) }),
             ]);
         });
 

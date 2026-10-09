@@ -30,8 +30,9 @@ const WATCH_PATH = '/video/1428-even-the-student-council-has-its-holes/32946-epi
 const SHOW_TITLE = 'Even the Student Council Has Its Holes!';
 const EPISODE_TITLE = 'Épisode 1 : Il manque une case à ce gars…';
 const EXTENSION_VERSION = JSON.parse(fs.readFileSync(path.join(EXT, 'manifest.json'), 'utf8')).version;
-const SETTINGS_COUNT = 15;
-const SHORTCUTS_COUNT = 14;
+const SETTINGS_COUNT = 4;
+const ALWAYS_ON_COUNT = 5;
+const SHORTCUTS_COUNT = 12;
 
 const results = [];
 let failures = 0;
@@ -88,7 +89,7 @@ await sleep(3200); // let the delayed relayouts run
 
 const html = page.locator('html');
 check('page classified as watch', (await html.getAttribute('data-adn-page')) === 'watch');
-check('theater attribute set', (await html.getAttribute('data-adn-theater')) === 'fill');
+check('theater attribute set', (await html.getAttribute('data-adn-theater')) === 'on');
 
 const geometry = await page.evaluate(() => {
     const wrapper = document.querySelector('[data-adn-theater-wrapper]');
@@ -105,7 +106,6 @@ const geometry = await page.evaluate(() => {
         header: rect(header),
         title: rect(title),
         sidebarMarked: sidebar?.hasAttribute('data-adn-theater-aside'),
-        rowMarked: Boolean(document.querySelector('[data-adn-theater-row]')),
         stageMarked: wrapper?.parentElement.hasAttribute('data-adn-theater-stage'),
         headerMarked: header?.hasAttribute('data-adn-theater-header'),
         scrollHeight: document.scrollingElement.scrollHeight,
@@ -120,9 +120,15 @@ check('wrapper is viewport wide', Math.abs(geometry.wrapper?.width - geometry.in
 check('wrapper is viewport tall', Math.abs(geometry.wrapper?.height - geometry.innerHeight) < 1, `${geometry.wrapper?.height} vs ${geometry.innerHeight}`);
 check('player fills wrapper', Math.abs(geometry.player?.height - geometry.innerHeight) < 1 && Math.abs(geometry.player?.width - geometry.innerWidth) < 1, JSON.stringify(geometry.player));
 check('player at the very top (title block moved below)', geometry.stageMarked && Math.abs(geometry.wrapper?.top) < 1 && geometry.title.top >= geometry.innerHeight - 1, `wrapper.top=${geometry.wrapper?.top} title.top=${geometry.title?.top}`);
-check('sidebar moved below the player', geometry.sidebarMarked && geometry.rowMarked && geometry.sidebar.top >= geometry.innerHeight - 1, `sidebar.top=${geometry.sidebar?.top}`);
+check('sidebar keeps its column and starts under the player, level with the title', geometry.sidebarMarked && Math.abs(geometry.sidebar.top - geometry.title.top) < 40 && geometry.sidebar.top >= geometry.innerHeight - 1 && geometry.sidebar.left > geometry.innerWidth / 2 && Math.abs(geometry.sidebar.width - 320) < 1, `sidebar=${JSON.stringify(geometry.sidebar)} title.top=${geometry.title?.top}`);
 check('page remains scrollable', geometry.scrollHeight > geometry.innerHeight + 400, `scrollHeight=${geometry.scrollHeight}`);
 check('header marked and hidden at top', geometry.headerMarked && geometry.headerVisible === 'hidden' && geometry.header.bottom <= 0, `${geometry.headerVisible} bottom=${geometry.header?.bottom}`);
+
+await page.evaluate(() => window.scrollTo(0, window.innerHeight));
+await sleep(300);
+await page.screenshot({ path: path.join(SHOTS, 'below-player.png') });
+await page.evaluate(() => window.scrollTo(0, 0));
+await sleep(300);
 
 await page.mouse.move(800, 10);
 await sleep(400);
@@ -144,12 +150,21 @@ const controls = await page.evaluate(() => {
         pip: Boolean(bar.querySelector('.adn-improver-pip-button')),
         pipEnabled: document.pictureInPictureEnabled,
         fullscreenLast: kids.indexOf(bar.querySelector('.vjs-fullscreen-control')) === kids.length - 1,
+        allVisible: ['.adn-improver-theater-button', '.adn-improver-rate-button', '.adn-improver-pip-button'].every((selector) => {
+            const element = bar.querySelector(selector);
+            if (!element) return false;
+            const rect = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+        }),
+        inlineOrder: bar.querySelector('.adn-improver-pip-button')?.style.getPropertyValue('order'),
     };
 });
 check('theater button injected and active', controls.theater && controls.theaterActive);
 check('rate menu injected with 7 items', controls.rate === '1×' && controls.rateItems === 7, `${controls.rate} / ${controls.rateItems}`);
 check('pip button injected when supported', controls.pip === controls.pipEnabled, `pipEnabled=${controls.pipEnabled}`);
 check('buttons inserted before fullscreen', controls.fullscreenLast);
+check('injected controls are visible and aligned with the fullscreen button', controls.allVisible && controls.inlineOrder === '0', `order=${controls.inlineOrder}`);
 
 // ------------------------------------------------------ Gradient handling --
 
@@ -250,7 +265,7 @@ await page.keyboard.press('t');
 await sleep(500);
 const off = await page.evaluate(() => ({
     attr: document.documentElement.getAttribute('data-adn-theater'),
-    marks: document.querySelectorAll('[data-adn-theater-wrapper],[data-adn-theater-chain],[data-adn-theater-row],[data-adn-theater-inner],[data-adn-theater-aside],[data-adn-theater-stage]').length,
+    marks: document.querySelectorAll('[data-adn-theater-wrapper],[data-adn-theater-chain],[data-adn-theater-inner],[data-adn-theater-aside],[data-adn-theater-stage]').length,
     wrapperWidth: document.querySelector('.adn-vjs-v4').getBoundingClientRect().width,
     headerTop: document.querySelector('header[data-testid="menuContent"]').getBoundingClientRect().top,
     titleAbovePlayer: document.querySelector('h1').getBoundingClientRect().bottom <= document.querySelector('.adn-vjs-v4').getBoundingClientRect().top + 1,
@@ -260,7 +275,7 @@ check('T disables theater mode and restores the native layout', off.attr === nul
 check('theater button reflects state', off.buttonActive === false);
 await page.keyboard.press('t');
 await sleep(800);
-check('T re-enables theater mode', await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater') === 'fill' && Math.abs(document.querySelector('[data-adn-theater-wrapper]').getBoundingClientRect().width - document.documentElement.clientWidth) < 1));
+check('T re-enables theater mode', await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater') === 'on' && Math.abs(document.querySelector('[data-adn-theater-wrapper]').getBoundingClientRect().width - document.documentElement.clientWidth) < 1));
 
 await page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
 await sleep(400);
@@ -281,7 +296,7 @@ await sleep(900);
 check('non-watch page disables everything', await page.evaluate(() => document.documentElement.getAttribute('data-adn-page') === 'other' && !document.documentElement.hasAttribute('data-adn-theater') && !document.querySelector('.adn-improver-control')));
 await page.evaluate(() => history.pushState({}, '', '/video/1428-even-the-student-council-has-its-holes/32947-episode-2'));
 await sleep(1200);
-check('back on a watch page re-applies theater', await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater') === 'fill' && Boolean(document.querySelector('.adn-improver-theater-button'))));
+check('back on a watch page re-applies theater', await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater') === 'on' && Boolean(document.querySelector('.adn-improver-theater-button'))));
 
 // ------------------------------------------------------------------ Popup --
 
@@ -294,16 +309,15 @@ if (extensionId) {
     await popup.goto(`chrome-extension://${extensionId}/popup/popup.html`);
     await sleep(500);
     const popupState = await popup.evaluate(() => ({
-        tabs: [...document.querySelectorAll('.tab')].map((tab) => tab.textContent),
         rows: document.querySelectorAll('.row').length,
+        alwaysOn: document.querySelectorAll('.always-on li').length,
         shortcuts: document.querySelectorAll('.shortcut-row').length,
+        labelsFilled: [...document.querySelectorAll('.row-label, .always-on li, .shortcut-label')].every((element) => element.textContent.trim().length > 0),
         theaterChecked: document.getElementById('setting-theaterMode').checked,
         version: document.getElementById('version').textContent,
-        seekLabel: [...document.querySelectorAll('.shortcut-label')][1]?.textContent,
     }));
-    check('popup renders 4 non-empty tabs', popupState.tabs.length === 4 && popupState.tabs.every(Boolean), popupState.tabs.join('|'));
-    check('popup renders every setting', popupState.rows === SETTINGS_COUNT, String(popupState.rows));
-    check('popup lists shortcuts with live values', popupState.shortcuts === SHORTCUTS_COUNT && /\b5 s\b/.test(popupState.seekLabel), popupState.seekLabel);
+    check('popup renders the four switches', popupState.rows === SETTINGS_COUNT, String(popupState.rows));
+    check('popup lists always-on features and shortcuts', popupState.alwaysOn === ALWAYS_ON_COUNT && popupState.shortcuts === SHORTCUTS_COUNT && popupState.labelsFilled, `${popupState.alwaysOn} / ${popupState.shortcuts}`);
     check('popup shows version', popupState.version === `v${EXTENSION_VERSION}`, `${popupState.version} vs manifest ${EXTENSION_VERSION}`);
     check('popup theater toggle reflects storage', popupState.theaterChecked === true);
     await popup.screenshot({ path: path.join(SHOTS, 'popup.png') });
@@ -311,32 +325,19 @@ if (extensionId) {
     await popup.click('[data-key="theaterMode"] .switch-track');
     await sleep(600);
     check('popup toggle propagates to the page', (await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater'))) === null);
-    check('dependent rows greyed out', await popup.evaluate(() => document.querySelector('[data-key="theaterSize"]').classList.contains('is-disabled')));
     await popup.click('[data-key="theaterMode"] .switch-track');
     await sleep(600);
-    check('popup toggle back re-enables', (await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater'))) === 'fill');
+    check('popup toggle back re-enables', (await page.evaluate(() => document.documentElement.getAttribute('data-adn-theater'))) === 'on');
 
-    await popup.click('.tab[data-section="shortcuts"]');
-    await popup.fill('#setting-seekStep', '8');
-    await popup.dispatchEvent('#setting-seekStep', 'change');
+    await popup.click('[data-key="shortcuts"] .switch-track');
     await sleep(400);
-    check('number setting saved and reflected in shortcut list', await popup.evaluate(() => /\b8 s\b/.test([...document.querySelectorAll('.shortcut-label')][1].textContent)));
-    const tA = await page.evaluate(() => {
-        const video = document.querySelector('video');
-        video.currentTime = 1;
-        return video.currentTime;
-    });
     await page.bringToFront();
+    const tA = await currentTime();
     await page.keyboard.press('ArrowRight');
     await sleep(150);
-    const tB = await currentTime();
-    check('page uses the new seek step', tB - tA > 7.5 && tB - tA < 8.6, `${tA} -> ${tB}`);
-
-    await popup.click('.tab[data-section="manage"]');
-    popup.on('dialog', (dialog) => dialog.accept());
-    await popup.click('#reset');
-    await sleep(500);
-    check('reset restores defaults', await popup.evaluate(() => document.getElementById('setting-seekStep').value === '5'));
+    check('shortcuts switch disables the keyboard handling', Math.abs((await currentTime()) - tA) < 0.5);
+    await popup.click('[data-key="shortcuts"] .switch-track');
+    await sleep(400);
     check('popup has no errors', popupErrors.length === 0, popupErrors.join(' | '));
 }
 

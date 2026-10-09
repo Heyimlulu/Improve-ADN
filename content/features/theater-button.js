@@ -10,12 +10,12 @@ import { t } from '../../shared/i18n.js';
 
 export class TheaterButton extends Feature {
     static id = 'theater-button';
-    settingKeys = ['theaterButton', 'theaterMode'];
+    settingKeys = ['theaterMode'];
 
     #button = null;
 
     isWanted() {
-        return this.ctx.settings.get('theaterButton');
+        return true;
     }
 
     onEnable() {

@@ -13,7 +13,6 @@ import { t } from '../../shared/i18n.js';
 
 export class PictureInPicture extends Feature {
     static id = 'picture-in-picture';
-    settingKeys = ['pipButton'];
 
     isApplicable() {
         return super.isApplicable() && Boolean(document.pictureInPictureEnabled);
